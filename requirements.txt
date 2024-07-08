@@ -1,0 +1,5 @@
+clickhouse-driver==0.2.7
+clickhouse-connect==0.7.15
+python-dotenv==0.21.0
+pandas==2.2.2
+requests==2.32.2
