@@ -1,0 +1,38 @@
+name: Build and deploy Python project to Azure Function App - functions-testing-replace
+
+on:
+  push:
+    branches:
+      - test_testing
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JSON_TEST_FILES_FOLDER: ${{ secrets.JSON_TEST_FILES_FOLDER }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python version
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Optional: Add step to run tests here
+      - name: Run tests
+        run: |
+          pytest
+        continue-on-error: false  # Continue to deployment even if tests fail
