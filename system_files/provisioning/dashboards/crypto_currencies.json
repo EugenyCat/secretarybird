@@ -1,0 +1,192 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "vertamedia-clickhouse-datasource",
+        "uid": "bdu47qmixbjeoc"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 23,
+        "w": 15,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "add_metadata": true,
+          "datasource": {
+            "type": "vertamedia-clickhouse-datasource",
+            "uid": "bdu47qmixbjeoc"
+          },
+          "dateTimeType": "DATETIME64",
+          "editorMode": "builder",
+          "extrapolate": true,
+          "format": "time_series",
+          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+          "interval": "",
+          "intervalFactor": 1,
+          "query": "SELECT Open_time as t, sum(Open) as Open FROM $v_db.$v_currency GROUP BY t ORDER BY t",
+          "rawQuery": "/* grafana dashboard=TimeSeries, user=1 */\nSELECT Open_time as t, sum(Open) as Open FROM CRYPTO_1d.$v_currenc GROUP BY t ORDER BY t",
+          "refId": "A",
+          "round": "0s",
+          "skip_comments": true
+        }
+      ],
+      "title": "$v_db.$v_currency",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "bnbusdt",
+          "value": "bnbusdt"
+        },
+        "datasource": {
+          "type": "vertamedia-clickhouse-datasource",
+          "uid": "bdu47qmixbjeoc"
+        },
+        "definition": "SELECT name\nFROM system.tables\nWHERE database = '$v_db'",
+        "hide": 0,
+        "includeAll": false,
+        "label": "currency",
+        "multi": false,
+        "name": "v_currency",
+        "options": [],
+        "query": "SELECT name\nFROM system.tables\nWHERE database = '$v_db'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "CRYPTO_1d",
+          "value": "CRYPTO_1d"
+        },
+        "datasource": {
+          "type": "vertamedia-clickhouse-datasource",
+          "uid": "bdu47qmixbjeoc"
+        },
+        "definition": "SELECT name\nFROM system.databases\nWHERE name NOT IN ('information_schema', 'default', 'system', 'INFORMATION_SCHEMA')",
+        "hide": 0,
+        "includeAll": false,
+        "label": "db",
+        "multi": false,
+        "name": "v_db",
+        "options": [],
+        "query": "SELECT name\nFROM system.databases\nWHERE name NOT IN ('information_schema', 'default', 'system', 'INFORMATION_SCHEMA')",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2023-10-26T18:39:52.706Z",
+    "to": "2024-03-25T08:27:36.172Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Crypto currencies",
+  "uid": "fdu49t8jd60aob",
+  "version": 5,
+  "weekStart": ""
+}
