@@ -1,15 +1,15 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.providers.telegram.operators.telegram import TelegramOperator
+from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-import time
 import sys
 import os
+from airflow.operators.empty import EmptyOperator
+from airflow.utils.trigger_rule import TriggerRule
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.insert(0, parent_dir)
 
-from database.ClickHouseBackupManager import ClickHouseBackupManager
+from pipeline.etl_manager.clickHouseBackupManager import ClickHouseBackupManagerFacade
 
 
 binance_api = 'binance_api'
@@ -59,39 +59,18 @@ with DAG(
 
     # --- Step 4 --- Set up creating backups db tasks
 
-    ch_backup_manager = ClickHouseBackupManager()
+    ch_backup_manager = ClickHouseBackupManagerFacade()
 
-    """
-    # Sensor to wait until the first day of the month
-    monthly_backup_sensor = TimeDeltaSensor(
-        task_id='monthly_backup_sensor',
-        delta=timedelta(days=(datetime.now().day - 31) % 30),  # Запуск в 12:30 первого числа каждого месяца,
-        mode='reschedule',
-        dag=dag_create_backup,
-    )
-    """
-
-    # Init lists for storing tasks for:
-    # 1. PythonOperator for create backup tasks
+    # Init lists for storing PythonOperator for create backup tasks
     create_backup_tasks = []
-    # 2. BranchPythonOperator for defining if the `create backup process` finished with problems or successfully
-    branch_is_there_a_problem_with_create_backup_tasks = []
-    # 3. TelegramOperator for sending notifications if there are problems
-    notify_about_create_backup_problem_tasks = []
-    # 4. EmptyOperator if the `create backup process` finished successfully
-    no_notify_create_backup_tasks = []
 
     # Get databases names from clickhouse container
     databases = ch_backup_manager.get_databases()
 
-    # Iterate through 'currency'+'interval' and init the tasks for
-    #  - 1. `create backup process` (by calling create_backup)
-    #  - 2. branch check if the `create backup process` finished with problems or successfully
-    #  - 3. telegram operator for sending notifications if there are problems
-    #  - 4. empty operator if the `create backup process` finished successfully
+    # Iterate through 'currency'+'interval' and init the `create backup process` tasks (by calling create_backup)
     for db_name in databases:
 
-        # - 1. create backup data task
+        # Create backup data task
         create_ch_db_backup_task = PythonOperator(
             task_id=f'backup_{db_name}',
             python_callable=create_backup,
@@ -99,42 +78,12 @@ with DAG(
         )
         create_backup_tasks.append(create_ch_db_backup_task)
 
-        #  - 2. branch check if the `create backup process` finished with problems or successfully
-        branch_define_create_backup_status_task = BranchPythonOperator(
-            task_id=f'define_create_backup_status_{db_name}',
-            python_callable=is_there_a_problem_with_backup_creating,
-            op_kwargs={'db_name': db_name},
-            provide_context=True,
-            dag=dag_create_backup
-        )
-        branch_is_there_a_problem_with_create_backup_tasks.append(branch_define_create_backup_status_task)
+    control_point = EmptyOperator(
+        task_id=f'control_point',
+        dag=dag_create_backup,
+        trigger_rule=TriggerRule.NONE_FAILED
+    )
 
-        #  - 3. telegram operator for sending notifications if there are problems in `create backup process`
-        notify_about_create_backup_problem_task = TelegramOperator(
-            task_id=f'failed_create_backup_{db_name}__notify',
-            token=os.getenv('TOKEN_TELEGRAM_ALERT_BOT'),
-            chat_id=os.getenv('CHAT_ID_TELEGRAM_ALERT_BOT'),
-            text="{{ task_instance.xcom_pull(task_ids='define_create_backup_status_' + params.db_name, key='error__creating_backup_process_message') }}",
-            params={
-                'db_name': db_name
-            },
-            dag=dag_create_backup
-        )
-        notify_about_create_backup_problem_tasks.append(notify_about_create_backup_problem_task)
 
-        #  - 4. empty operator if the `create backup process` finished successfully
-        no_notification_create_backup_task = TelegramOperator(
-            task_id=f'success_create_backup_{db_name}__no_notify',
-            token=os.getenv('TOKEN_TELEGRAM_ALERT_BOT'),
-            chat_id=os.getenv('CHAT_ID_TELEGRAM_ALERT_BOT'),
-            text="{{ task_instance.xcom_pull(task_ids='define_create_backup_status_' + params.db_name, key='success__creating_backup_process_message') }}",
-            params={
-                'db_name': db_name
-            },
-            dag=dag_create_backup
-        )
-        no_notify_create_backup_tasks.append(no_notification_create_backup_task)
-
-        for i in range(len(create_backup_tasks)):
-            create_backup_tasks[i] >> branch_is_there_a_problem_with_create_backup_tasks[i] >> [notify_about_create_backup_problem_tasks[i], no_notify_create_backup_tasks[i]]
-            time.sleep(0.1)
+    for i in range(len(create_backup_tasks)):
+        create_backup_tasks[i] >> control_point
