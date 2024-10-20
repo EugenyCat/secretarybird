@@ -9,3 +9,4 @@ cryptography==42.0.8
 apache-airflow==2.9.2
 apache-airflow-providers-telegram==4.5.2
 docker==7.1.0
+python-telegram-bot==13.12

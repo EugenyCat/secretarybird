@@ -62,7 +62,7 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
-    _PIP_ADDITIONAL_REQUIREMENTS: clickhouse_connect==0.7.15 apache-airflow-providers-telegram==4.5.2
+    _PIP_ADDITIONAL_REQUIREMENTS: clickhouse_connect==0.7.15 python-telegram-bot==13.12
     PYTHONPATH: '/opt/airflow/dags:/opt/airflow/database:/opt/airflow/pipline:/opt/airflow/pipeline/etl'
     TZ: UTC
     #_AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
@@ -89,6 +89,7 @@ x-airflow-common:
     - ./database:/opt/airflow/database
     - ./system_files/info_lacks_db:/opt/airflow/system_files/info_lacks_db
     - ./system_files/provisioning:/opt/airflow/system_files/provisioning
+    - ./system_files/constants:/opt/airflow/system_files/constants
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
