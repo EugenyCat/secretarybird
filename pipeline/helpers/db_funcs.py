@@ -522,5 +522,3 @@ class DBFuncs(ConfigurationBuilder):
 
         # Drop table with suffix='_old'
         self.drop_table(suffix='_old')
-
-

@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 
 
+analysis_materials/historical_data/*
+
 
 # C extensions
 *.so

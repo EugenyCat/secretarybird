@@ -50,7 +50,7 @@ class ETLUtils(ConfigurationBuilder):
                 list of tuples: A list where each tuple represents an interval of the form
                                 (interval_start, interval_end), with intervals designed
                                 to fit within the 500-record limit of the API.
-    """
+        """
 
         total_days = (self.end - self.start).days
         total_years = self.end.year - self.start.year

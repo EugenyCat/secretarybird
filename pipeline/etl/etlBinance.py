@@ -2,6 +2,7 @@ from pipeline.helpers.etl_setup import ETLProtocol, ConfigurationBuilder
 from pipeline.helpers.elt_utils import ETLUtils
 from pipeline.helpers.db_funcs import DBFuncs
 from pipeline.helpers.telegram_notifier import TelegramNotifier
+from system_files.constants.constants import DEFAULT_DATA_START_LOAD
 import os
 import requests
 import pandas as pd
@@ -101,7 +102,7 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
                     f"the max data from {self.database}.{self.currency.lower()}_{self.interval}: {e}"
                 )
                 # Get the default start time value
-                start_time_raw = os.getenv('DEFAULT_DATA_START_LOAD')
+                start_time_raw = DEFAULT_DATA_START_LOAD
 
             # Parse the raw start time string into a datetime object and Set the timezone to UTC
             start_date = datetime_parser(start_time_raw).replace(tzinfo=pytz.UTC)

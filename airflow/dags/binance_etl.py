@@ -13,7 +13,6 @@ sys.path.insert(0, parent_dir)
 from pipeline.etl_manager.dataQualityManager import DataQualityManager
 from pipeline.etl.etlBinance import ETLBinance
 
-
 API_NAME = 'binance_api'
 
 default_args = {
@@ -35,6 +34,9 @@ with DAG(
 
     # ---STEP 2--- Set up ETL Binance tasks
 
+    # Create an instance of ETLBinance to manage the ETL process
+    etl_instance = ETLBinance()
+
     # Get the configurations for ETL (start, end, currency, interval)
     etl_process_manager = DataQualityManager(API_NAME)
     elt_config = etl_process_manager.get_api_configurations()
@@ -45,8 +47,6 @@ with DAG(
     # Iterate through 'currency'+'interval' and init the tasks for etl process (by calling run_etl)
     for currency in elt_config['currency']:
         for interval in elt_config['interval']:
-
-            etl_instance = ETLBinance()
 
             # - 1. `etl` task
             etl_task = PythonOperator(
@@ -63,7 +63,7 @@ with DAG(
 
             etl_binance_tasks.append(etl_task)
 
-    # empty operator as a control_point
+    # Empty operator as a control_point
     control_point = EmptyOperator(
         task_id=f'control_point',
         dag=dag_binance_etl,

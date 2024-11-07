@@ -1,53 +1,45 @@
 import logging
-from pipeline.helpers.elt_utils import ConfigurationBuilder
-from pipeline.helpers.telegram_notifier import TelegramNotifier
-from pipeline.helpers.db_funcs import DBFuncs
+from pipeline.etl_manager.baseManager import BaseManager
 from pipeline.helpers.elt_utils import ETLUtils
 import pandas as pd
 import os
-import json
 from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 import math
 
 
-class DataQualityManager(ConfigurationBuilder):
+class DataQualityManager(BaseManager):
+    """
+        DataQualityManager is responsible for managing data quality metrics
+        within a specified data source. It provides functionalities to check
+        for missing data, data continuity, and duplicates, as well as to recover
+        any missing values and generate comprehensive reports on data quality.
+
+        Attributes:
+            __unit_to_seconds (dict): A mapping of time intervals to their equivalent
+                                       in seconds, used for interval calculations.
     """
 
-    """
-    # how many seconds in interval
+    # Mapping of time intervals to their equivalent in seconds
     __unit_to_seconds = {
-        "1h": 3600,
-        "12h": 12 * 3600,
-        "1d": 24 * 3600,
-        "3d": 72 * 3600,
-        "1w": 7 * 24 * 3600
+        "1h": 3600,        # 1 hour in seconds
+        "12h": 12 * 3600,  # 12 hours in seconds
+        "1d": 24 * 3600,   # 1 day in seconds
+        "3d": 72 * 3600,   # 3 days in seconds
+        "1w": 7 * 24 * 3600  # 1 week in seconds
     }
 
-    # Variables for generating awesome alerts
-    __line_str = '⤵\n'
-    __line_split_messages = '\n✦•·················•✦•·················•✦\n'
-
     def __init__(self, source_name):
-        super().__init__()
+        """
+            Initializes a DataQualityManager instance for a specified data source.
 
-        # Load API configurations
-        try:
-            config_path = os.getenv('JSON_EXTRACT_CURRENCIES_SETTINGS')
-            self.__api_configurations = json.load(open(f"{config_path}"))[source_name]
-        except FileNotFoundError as e:
-            logging.error(f"[etl_manager/dataQualityManager.py] Error loading API configurations: {e}")
-            raise e
+            This method sets up the manager for monitoring and managing data quality
+            for the provided source name by calling the parent class initializer.
 
-        # Set database name
-        self.set_database(self.__api_configurations['database'])
-
-        # Init TelegramNotifier
-        self.notifier = TelegramNotifier()
-
-
-    def get_api_configurations(self):
-        return self.__api_configurations
+            Args:
+                source_name (str): The name of the data source for which the quality manager is being initialized.
+        """
+        super().__init__(source_name)
 
 
     def get_the_known_lacks(self):
@@ -338,7 +330,7 @@ class DataQualityManager(ConfigurationBuilder):
         self.insert_into_db(missing_data)
 
         # Generate the report of the recovered missing data
-        answer_report = self.__line_str
+        answer_report = self.line_str
         answer_report += (f"✅ Missing data recovered: "
                           f"{[el.strftime('%Y-%m-%d %H:%M:%S') for el in missing_data['Open_time'][-5:]]}. \n")
 
@@ -360,7 +352,7 @@ class DataQualityManager(ConfigurationBuilder):
 
         # Generate the report if duplicates are found
         if len(df_doubles) > 0:
-            answer_report += self.__line_str
+            answer_report += self.line_str
             answer_report += (f" ➜ Duplicates found:\n"
                               f"{[el.strftime('%Y-%m-%d %H:%M:%S') for el in df_doubles['Open_time'][-5:]]}. \n")
 
@@ -415,14 +407,26 @@ class DataQualityManager(ConfigurationBuilder):
         if len(answer_report) > 0:
             # Initialize the report title with currency and interval information
             report_title = f'📢🔔⚠️ REPORT about problems for <b>{self.currency}, {self.interval}</b>:\n'
-            return report_title + answer_report + self.__line_split_messages
+            return report_title + answer_report + self.line_split_messages
 
         return None
 
-# TODO encapsulate into Fasad
+
 class DataQualityManagerFacade(DataQualityManager):
+    """
+        Facade for managing data quality checks on a database.
+
+        This class encapsulates the functionality of performing data quality checks
+        for a specified currency and time interval, and provides a simplified interface
+        for interacting with the underlying data quality management system.
+    """
 
     def __init__(self, source_name):
+        """
+            Initializes the DataQualityManagerFacade with a given source name.
+
+            :param source_name: str - The name of the data source being managed.
+        """
         super().__init__(source_name)
 
 
@@ -443,21 +447,13 @@ class DataQualityManagerFacade(DataQualityManager):
                 - (dict, None) if no issues are found in the database.
         """
         try:
-            # Create and set the database session using the ClickHouse connection
-            self.set_db_session(self.clickhouse_conn.get_session())
-
             # Set the currency and interval for the DB check
             self.set_currency(currency) \
                 .set_interval(interval)
 
-            # Initialize db_funcs with database session, database, currency, and interval information
-            self.db_funcs = (
-                DBFuncs()
-                .set_db_session(self.db_session)
-                .set_database(self.database)
-                .set_currency(self.currency)
+            # Set the currency and interval information in db_funcs
+            self.db_funcs.set_currency(self.currency) \
                 .set_interval(self.interval)
-            )
 
             # Generate a data quality report, checking for issues like missing data, duplicates, etc.
             data_quality_report = self.generate_data_quality_report()
@@ -486,7 +482,7 @@ class DataQualityManagerFacade(DataQualityManager):
 
 
     def __str__(self):
-        return f'<[etl_manager/dataQualityManager.py] {self.currency}_{self.interval}>'
+        return f'[etl_manager/dataQualityManager.py] {self.currency}_{self.interval}'
 
 
 """

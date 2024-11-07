@@ -12,6 +12,7 @@ sys.path.insert(0, parent_dir)
 
 from pipeline.etl_manager.clickHouseBackupManager import ClickHouseBackupManagerFacade
 
+API_NAME_LIST = ['binance_api']
 
 default_args = {
     'owner': 'airflow',
@@ -20,12 +21,6 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(seconds=5),
 }
-
-def restore_db_if_not_exists(manager, backup_name):
-    """
-        Call the method restore_backup_database(), that restores bd from files "backup_name" if db doesn't exist.
-    """
-    return manager.restore_backup_database(backup_name)
 
 
 with DAG(
@@ -36,26 +31,27 @@ with DAG(
     catchup=False,
 ) as dag_binance_restore_bd:
 
-    # ---STEP 1--- Restoring bd from backups if db doesn't exist
+    # ---STEP 1--- Restoring database from backups if database doesn't exist
 
-    # Get the list of existed backup names from container Clickhouse
-    ch_backup_manager = ClickHouseBackupManagerFacade()
-    backups = ch_backup_manager.get_backups_from_container()
-
-    # Init lists for storing PythonOperator for restoring bd
+    # Init lists for storing PythonOperator for restoring databases
     restore_tasks = []
 
-    # Iterate through 'backups' and init the tasks for restoring db
-    for backup_name in backups:
-            # restoring db
-            restore_db_from_backup = PythonOperator(
-                task_id=f'restore_if_not_exists_{backup_name}',
-                python_callable=ch_backup_manager.restore_backup_database,
-                op_kwargs={'backup_name': backup_name},
-                dag=dag_binance_restore_bd
-            )
-            restore_tasks.append(restore_db_from_backup)
+    # Iterate through 'API_NAME' and init the ClickHouseBackupManagerFacade instance with the certain API_NAME
+    for API_NAME in API_NAME_LIST:
+        # Retrieve the name of the database to restore from the configuration file (etl_assets/currencies.json)
+        ch_backup_manager = ClickHouseBackupManagerFacade(source_name=API_NAME, use_extended_timeout=True)
+        database = ch_backup_manager.get_api_configurations()['database']
 
+        # Create the restoring db task
+        restore_db_from_backup = PythonOperator(
+            task_id=f'restore_if_not_exists_{database}',
+            python_callable=ch_backup_manager.restore_backup_database,
+            op_kwargs={'database_name': database},
+            dag=dag_binance_restore_bd
+        )
+        restore_tasks.append(restore_db_from_backup)
+
+    # Empty operator as a control_point
     control_point = EmptyOperator(
         task_id=f'control_point',
         dag=dag_binance_restore_bd,

@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.trigger_rule import TriggerRule
 from datetime import datetime, timedelta
@@ -13,7 +12,7 @@ sys.path.insert(0, parent_dir)
 from pipeline.etl_manager.dataQualityManager import DataQualityManagerFacade
 
 
-binance_api = 'binance_api'
+API_NAME = 'binance_api'
 
 default_args = {
     'owner': 'airflow',
@@ -22,16 +21,6 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(seconds=5),
 }
-
-
-def check_data(manager, currency, interval):
-    """
-        Check CH db data on:
-        - if data has lacks like (1 row: 2024-01-01 09:00:00, 2 row 2024-01-01 12:00:00 - miss 10:00, 11:00)
-        - if data is continuous (e.g. all months, days etc. - similar prev. case)
-        - if  last data from dt is really today
-    """
-    return manager.check_db(currency, interval)
 
 
 with DAG(
@@ -45,7 +34,7 @@ with DAG(
     # ---STEP 3--- Checking data
 
     # Get the configurations for ETL (start, end, currency, interval)
-    etl_process_manager = DataQualityManagerFacade(binance_api)
+    etl_process_manager = DataQualityManagerFacade(API_NAME)
     elt_config = etl_process_manager.get_api_configurations()
 
     # Init the list for storing PythonOperator for check data tasks
@@ -60,7 +49,6 @@ with DAG(
                 task_id=f'check_data_{currency}_{interval}',
                 python_callable=etl_process_manager.check_db,
                 op_kwargs={
-                    #'manager': etl_process_manager,
                     'currency': currency,
                     'interval': interval
                 },
@@ -73,14 +61,5 @@ with DAG(
         trigger_rule=TriggerRule.NONE_FAILED
     )
 
-    trigger_dag_create_backup = TriggerDagRunOperator(
-        task_id='trigger_dag_BinanceAPI_ETL_part_4_create_backup',
-        trigger_dag_id='BinanceAPI_ETL_part_4_create_backup',
-        trigger_rule=TriggerRule.NONE_SKIPPED
-    )
-
-
     for i in range(len(check_data_tasks)):
         check_data_tasks[i] >> control_point
-
-    control_point >> trigger_dag_create_backup

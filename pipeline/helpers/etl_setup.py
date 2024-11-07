@@ -1,5 +1,5 @@
 from typing import Protocol
-from database.ClickHouseConnection import ClickHouseConnection
+from pipeline.database.clickHouseConnection import ClickHouseConnection
 from functools import wraps
 import time
 
