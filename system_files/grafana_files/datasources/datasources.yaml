@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: ClickHouse_TS
+    type: vertamedia-clickhouse-datasource
+    access: proxy
+    url: http://${CLICKHOUSE_HOST}:${CLICKHOUSE_PORT}
+    uid: bdu47qmixbjeoc
+    isDefault: true
+    basicAuth: true
+    jsonData:
+      defaultDatabase: default
+    secureJsonData:
+      basicAuthPassword: ${CLICKHOUSE_PASSWORD}
+    basicAuthUser: ${CLICKHOUSE_USER}
+    version: 1
+    editable: true

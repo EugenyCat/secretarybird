@@ -1,0 +1,230 @@
+{
+    "meta": {
+        "type": "db",
+        "canSave": true,
+        "canEdit": true,
+        "canAdmin": true,
+        "canStar": true,
+        "canDelete": true,
+        "slug": "crypto-currencies",
+        "url": "/d/fdu49t8jd60aob/crypto-currencies",
+        "expires": "0001-01-01T00:00:00Z",
+        "created": "2024-10-31T20:37:02Z",
+        "updated": "2024-10-31T20:37:02Z",
+        "updatedBy": "teapartygirls",
+        "createdBy": "teapartygirls",
+        "version": 1,
+        "hasAcl": false,
+        "isFolder": false,
+        "folderId": 0,
+        "folderUid": "",
+        "folderTitle": "General",
+        "folderUrl": "",
+        "provisioned": false,
+        "provisionedExternalId": "",
+        "annotationsPermissions": {
+            "dashboard": {
+                "canAdd": true,
+                "canEdit": true,
+                "canDelete": true
+            },
+            "organization": {
+                "canAdd": true,
+                "canEdit": true,
+                "canDelete": true
+            }
+        }
+    },
+    "dashboard": {
+        "annotations": {
+            "list": [
+                {
+                    "builtIn": 1,
+                    "datasource": {
+                        "type": "grafana",
+                        "uid": "-- Grafana --"
+                    },
+                    "enable": true,
+                    "hide": true,
+                    "iconColor": "rgba(0, 211, 255, 1)",
+                    "name": "Annotations & Alerts",
+                    "type": "dashboard"
+                }
+            ]
+        },
+        "editable": true,
+        "fiscalYearStartMonth": 0,
+        "graphTooltip": 0,
+        "id": 3,
+        "links": [],
+        "panels": [
+            {
+                "datasource": {
+                    "type": "vertamedia-clickhouse-datasource",
+                    "uid": "bdu47qmixbjeoc"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "color": {
+                            "mode": "palette-classic"
+                        },
+                        "custom": {
+                            "axisBorderShow": false,
+                            "axisCenteredZero": false,
+                            "axisColorMode": "text",
+                            "axisLabel": "",
+                            "axisPlacement": "auto",
+                            "barAlignment": 0,
+                            "drawStyle": "line",
+                            "fillOpacity": 0,
+                            "gradientMode": "none",
+                            "hideFrom": {
+                                "legend": false,
+                                "tooltip": false,
+                                "viz": false
+                            },
+                            "insertNulls": false,
+                            "lineInterpolation": "linear",
+                            "lineWidth": 1,
+                            "pointSize": 5,
+                            "scaleDistribution": {
+                                "type": "linear"
+                            },
+                            "showPoints": "auto",
+                            "spanNulls": false,
+                            "stacking": {
+                                "group": "A",
+                                "mode": "none"
+                            },
+                            "thresholdsStyle": {
+                                "mode": "off"
+                            }
+                        },
+                        "mappings": [],
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "color": "green",
+                                    "value": null
+                                },
+                                {
+                                    "color": "red",
+                                    "value": 80
+                                }
+                            ]
+                        }
+                    },
+                    "overrides": []
+                },
+                "gridPos": {
+                    "h": 23,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 2,
+                "options": {
+                    "legend": {
+                        "calcs": [],
+                        "displayMode": "list",
+                        "placement": "bottom",
+                        "showLegend": true
+                    },
+                    "tooltip": {
+                        "mode": "single",
+                        "sort": "none"
+                    }
+                },
+                "repeat": "v_currency",
+                "repeatDirection": "h",
+                "targets": [
+                    {
+                        "add_metadata": true,
+                        "database": "CRYPTO",
+                        "datasource": {
+                            "type": "vertamedia-clickhouse-datasource",
+                            "uid": "bdu47qmixbjeoc"
+                        },
+                        "dateTimeType": "DATETIME64",
+                        "editorMode": "builder",
+                        "extrapolate": true,
+                        "format": "time_series",
+                        "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+                        "interval": "",
+                        "intervalFactor": 1,
+                        "query": "SELECT Open_time as t, sum(Open) as Open FROM CRYPTO.${v_currency}_${v_interval}  GROUP BY t ORDER BY t",
+                        "rawQuery": "/* grafana dashboard=Crypto currencies, user=1 */\nSELECT Open_time as t, sum(Open) as Open FROM CRYPTO.btcusdt_'1h  GROUP BY t ORDER BY t",
+                        "refId": "A",
+                        "round": "0s",
+                        "skip_comments": true
+                    }
+                ],
+                "title": "$v_currency, $v_interval",
+                "type": "timeseries"
+            }
+        ],
+        "refresh": "",
+        "schemaVersion": 39,
+        "tags": [],
+        "templating": {
+            "list": [
+                {
+                    "allValue": "",
+                    "current": {
+                        "selected": false,
+                        "text": "bnbusdt",
+                        "value": "bnbusdt"
+                    },
+                    "datasource": {
+                        "type": "vertamedia-clickhouse-datasource",
+                        "uid": "bdu47qmixbjeoc"
+                    },
+                    "definition": "SELECT DISTINCT \n    splitByString('_', name)[1] AS v_currency\nFROM system.tables\nWHERE database = 'CRYPTO'\nAND name LIKE '%_%'",
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": "Currency Name",
+                    "multi": false,
+                    "name": "v_currency",
+                    "options": [],
+                    "query": "SELECT DISTINCT \n    splitByString('_', name)[1] AS v_currency\nFROM system.tables\nWHERE database = 'CRYPTO'\nAND name LIKE '%_%'",
+                    "refresh": 1,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "type": "query"
+                },
+                {
+                    "current": {},
+                    "datasource": {
+                        "type": "vertamedia-clickhouse-datasource",
+                        "uid": "bdu47qmixbjeoc"
+                    },
+                    "definition": "SELECT DISTINCT\n    splitByString('_', name)[2] AS interval\nFROM system.tables\nWHERE database = 'CRYPTO'\nAND name LIKE '%_%'",
+                    "hide": 0,
+                    "includeAll": false,
+                    "label": "Interval",
+                    "multi": false,
+                    "name": "v_interval",
+                    "options": [],
+                    "query": "SELECT DISTINCT\n    splitByString('_', name)[2] AS interval\nFROM system.tables\nWHERE database = 'CRYPTO'\nAND name LIKE '%_%'",
+                    "refresh": 1,
+                    "regex": "",
+                    "skipUrlSync": false,
+                    "sort": 0,
+                    "type": "query"
+                }
+            ]
+        },
+        "time": {
+            "from": "2023-10-26T18:39:52.706Z",
+            "to": "2024-03-25T08:27:36.172Z"
+        },
+        "timepicker": {},
+        "timezone": "browser",
+        "title": "Crypto currencies",
+        "uid": "fdu49t8jd60aob",
+        "version": 1,
+        "weekStart": "sunday"
+    }
+}
