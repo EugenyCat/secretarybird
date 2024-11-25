@@ -1,4 +1,4 @@
-from pipeline.helpers.etl_setup import ConfigurationBuilder
+from etl_pipeline.helpers.etl_setup import ConfigurationBuilder
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 

@@ -1,6 +1,6 @@
-from pipeline.helpers.elt_utils import ConfigurationBuilder
-from pipeline.helpers.db_funcs import DBFuncs
-from pipeline.helpers.telegram_notifier import TelegramNotifier
+from etl_pipeline.helpers.elt_utils import ConfigurationBuilder
+from etl_pipeline.helpers.db_funcs import DBFuncs
+from etl_pipeline.helpers.telegram_notifier import TelegramNotifier
 import logging
 import os
 import json

@@ -1,7 +1,7 @@
-from pipeline.helpers.etl_setup import ETLProtocol, ConfigurationBuilder
-from pipeline.helpers.elt_utils import ETLUtils
-from pipeline.helpers.db_funcs import DBFuncs
-from pipeline.helpers.telegram_notifier import TelegramNotifier
+from etl_pipeline.helpers.etl_setup import ETLProtocol, ConfigurationBuilder
+from etl_pipeline.helpers.elt_utils import ETLUtils
+from etl_pipeline.helpers.db_funcs import DBFuncs
+from etl_pipeline.helpers.telegram_notifier import TelegramNotifier
 from system_files.constants.constants import DEFAULT_DATA_START_LOAD
 import os
 import requests

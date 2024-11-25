@@ -1,4 +1,4 @@
-from pipeline.helpers.etl_setup import ConfigurationBuilder, retry
+from etl_pipeline.helpers.etl_setup import ConfigurationBuilder, retry
 import pandas as pd
 
 

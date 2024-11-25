@@ -1,4 +1,4 @@
-from pipeline.etl_manager.baseManager import BaseManager
+from etl_pipeline.etl_manager.baseManager import BaseManager
 import subprocess
 import logging
 from system_files.constants.constants import CH_BACKUPS_PATH, CH_OLD_BACKUPS_SUBDIRECTORY

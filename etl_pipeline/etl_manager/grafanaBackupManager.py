@@ -4,7 +4,7 @@ import json
 import base64
 from datetime import datetime
 from system_files.constants.constants import GRAFANA_BACKUP_DIR
-from pipeline.helpers.telegram_notifier import TelegramNotifier
+from etl_pipeline.helpers.telegram_notifier import TelegramNotifier
 import logging
 
 

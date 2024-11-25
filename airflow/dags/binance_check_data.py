@@ -9,7 +9,7 @@ import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.insert(0, parent_dir)
 
-from pipeline.etl_manager.dataQualityManager import DataQualityManagerFacade
+from etl_pipeline.etl_manager.dataQualityManager import DataQualityManagerFacade
 
 
 API_NAME = 'binance_api'
