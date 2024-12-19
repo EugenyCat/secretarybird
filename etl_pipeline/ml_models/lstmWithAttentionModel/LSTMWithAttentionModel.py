@@ -6,9 +6,12 @@ from ml_pipeline.ml_models.baseModel import BaseModel
 
 class LSTMWithAttentionModel(BaseModel):
     """
-    LSTM Model with Attention mechanism. Inherits from BaseModel and implements
-    the required methods for training, prediction, and saving/loading model states.
+        LSTM Model with Attention mechanism. Inherits from BaseModel and implements
+        the required methods for training, prediction, and saving/loading model states.
     """
+
+    def __str__(self):
+        return 'lstm_attention'
 
     def __init__(self, input_dim=10, hidden_dim=64, num_layers=2, output_dim=1):
         """

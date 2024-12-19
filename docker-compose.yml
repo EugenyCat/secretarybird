@@ -63,7 +63,7 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
     _PIP_ADDITIONAL_REQUIREMENTS: clickhouse_connect==0.7.15 python-telegram-bot==13.12
-    PYTHONPATH: '/opt/airflow/dags:/opt/airflow/database:/opt/airflow/pipline:/opt/airflow/pipeline/etl'
+    PYTHONPATH: '/opt/airflow/dags:/opt/airflow/database:/opt/airflow/pipline:/opt/airflow/etl_pipeline/etl'
     TZ: UTC
     #_AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
     #_AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_WWW_USER_PASSWORD}
@@ -84,8 +84,8 @@ x-airflow-common:
     - ./airflow/plugins:/opt/airflow/plugins
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/airflow.cfg:/opt/airflow.cfg
-    - ./pipeline:/opt/airflow/pipeline
-    - ./system_files/etl_assets:/opt/airflow/system_files/etl_assets
+    - ./etl_pipeline:/opt/airflow/etl_pipeline
+    - ./system_files/pipeline_assets:/opt/airflow/system_files/pipeline_assets
     - ./system_files/info_lacks_db:/opt/airflow/system_files/info_lacks_db
     - ./system_files/grafana_files:/opt/airflow/system_files/provisioning
     - ./system_files/constants:/opt/airflow/system_files/constants

@@ -1,5 +1,5 @@
-from etl_pipeline.helpers.elt_utils import ConfigurationBuilder
-from etl_pipeline.helpers.db_funcs import DBFuncs
+from etl_pipeline.helpers.setup import ConfigurationBuilder
+from etl_pipeline.helpers.db_funcs_etl import DBFuncsETL
 from etl_pipeline.helpers.telegram_notifier import TelegramNotifier
 import logging
 import os
@@ -44,15 +44,15 @@ class BaseManager(ConfigurationBuilder):
         # Set an extended connection timeout if specified and set the session
         if use_extended_timeout:
             self.clickhouse_conn.set_connection_timeout()
-        self.set_db_session(self.clickhouse_conn.get_session())
+        self.set_client_session(self.clickhouse_conn.get_client_session())
 
         # Set the database name from the loaded configurations
         self.set_database(self.__api_configurations['database'])
 
         # Initialize db_funcs to handle various database operations
         self.db_funcs = (
-            DBFuncs()  # Create an instance of DBFuncs
-            .set_db_session(self.db_session)
+            DBFuncsETL()  # Create an instance of DBFuncsETL
+            .set_client_session(self.db_client_session)
             .set_database(self.database)
         )
 
@@ -62,3 +62,10 @@ class BaseManager(ConfigurationBuilder):
 
     def get_api_configurations(self):
         return self.__api_configurations
+
+
+    def get_ts_tables(self):
+        """
+            todo: add docstring
+        """
+        return self.db_funcs.get_table_names()

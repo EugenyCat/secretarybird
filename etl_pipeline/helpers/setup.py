@@ -1,5 +1,5 @@
 from typing import Protocol
-from database.clickHouseConnection import ClickHouseConnection
+from etl_pipeline.database.clickHouseConnection import ClickHouseConnection
 from functools import wraps
 import time
 
@@ -86,15 +86,28 @@ class ConfigurationBuilder:
     def __init__(self):
         # ClickHouse connection object
         self.clickhouse_conn = ClickHouseConnection()
+        self.db_client_session = None
+        self.db_sqlalchemy_session = None
 
-        self.db_session = None
-        self.start = None
-        self.end = None
+        # TS params
+        self.database = None
         self.currency = None
         self.interval = None
+        self.start = None
+        self.end = None
 
-    def set_db_session(self, db_session=None):
-        self.db_session = db_session
+        # ML and NN params
+        self.modelname = None
+        self.model = None
+        self.data = None
+
+
+    def set_client_session(self, db_client_session=None):
+        self.db_client_session = db_client_session
+        return self
+
+    def set_sqlalchemy_session(self, db_sqlalchemy_session=None):
+        self.db_sqlalchemy_session = db_sqlalchemy_session
         return self
 
     def set_start(self, start=None):
@@ -115,4 +128,16 @@ class ConfigurationBuilder:
 
     def set_database(self, database=None):
         self.database = database
+        return self
+
+    def set_modelname(self, modelname=None):
+        self.modelname = modelname
+        return self
+
+    def set_model(self, model=None):
+        self.model = model
+        return self
+
+    def set_data(self, data=None):
+        self.data = data
         return self

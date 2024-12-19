@@ -2,6 +2,7 @@ apache-airflow==2.9.2
 apache-airflow-providers-telegram==4.5.2
 clickhouse-driver==0.2.7
 clickhouse-connect==0.7.15
+clickhouse-sqlalchemy==0.3.2
 cryptography==42.0.8
 python-dotenv==0.21.0
 docker==7.1.0
@@ -10,7 +11,7 @@ pytest==7.4.4
 pytz==2024.1
 python-telegram-bot==13.12
 scikit-learn==1.5.2
-sqlalchemy==1.4.52
+sqlalchemy==2.0.36
 requests==2.32.2
 torch==2.5.1
 mlflow==2.18.0rc0

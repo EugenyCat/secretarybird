@@ -1,6 +1,6 @@
-from etl_pipeline.helpers.etl_setup import ETLProtocol, ConfigurationBuilder
-from etl_pipeline.helpers.elt_utils import ETLUtils
-from etl_pipeline.helpers.db_funcs import DBFuncs
+from etl_pipeline.helpers.setup import ETLProtocol, ConfigurationBuilder
+from etl_pipeline.helpers.utils import ETLUtils
+from etl_pipeline.helpers.db_funcs_etl import DBFuncsETL
 from etl_pipeline.helpers.telegram_notifier import TelegramNotifier
 from system_files.constants.constants import DEFAULT_DATA_START_LOAD
 import os
@@ -76,7 +76,7 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
             # Set etl_utils: various ETL helper functions
             self.etl_utils = (
                 ETLUtils()
-                .set_db_session(self.db_session)
+                .set_client_session(self.db_client_session)
                 .set_database(self.database)
                 .set_currency(self.currency)
                 .set_interval(self.interval)
@@ -84,8 +84,8 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
 
             # Set db_funcs: various database operations
             self.db_funcs = (
-                DBFuncs()
-                .set_db_session(self.db_session)
+                DBFuncsETL()
+                .set_client_session(self.db_client_session)
                 .set_database(self.database)
                 .set_currency(self.currency)
                 .set_interval(self.interval)
@@ -216,7 +216,7 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
 
     def run_etl(self, input_params):
         # Create db connection
-        self.set_db_session(self.clickhouse_conn.get_session())
+        self.set_client_session(self.clickhouse_conn.get_client_session())
 
         # Validate params
         validated_params, error = self.validate_parameters(input_params)

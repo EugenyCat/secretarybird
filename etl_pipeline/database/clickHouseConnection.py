@@ -3,6 +3,7 @@ import os
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -52,7 +53,7 @@ class ClickHouseConnection:
         return self.client
 
 
-    def get_sqlalchemy_session(self, database_name):
+    def get_sqlalchemy_session(self):
         """
             Get an SQLAlchemy session, creating one if it does not already exist.
         """

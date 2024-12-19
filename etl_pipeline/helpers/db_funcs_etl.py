@@ -1,8 +1,8 @@
-from etl_pipeline.helpers.etl_setup import ConfigurationBuilder, retry
+from etl_pipeline.helpers.setup import ConfigurationBuilder, retry
 import pandas as pd
 
 
-class DBFuncs(ConfigurationBuilder):
+class DBFuncsETL(ConfigurationBuilder):
     """
         A class for handling various database operations related to ClickHouse.
 
@@ -16,7 +16,7 @@ class DBFuncs(ConfigurationBuilder):
 
         Attributes:
             table_columns (list): A list of tuples defining the schema of the tables, including field names and data types.
-            db_session (object): A session object used for executing database queries.
+            db_client_session (object): A session object used for executing database queries.
     """
 
     # the column names in the db
@@ -65,6 +65,15 @@ class DBFuncs(ConfigurationBuilder):
         return f'{self.database}.{self.currency}_{self.interval}'
 
 
+    def get_table_names(self):
+        """
+            todo: add docstring
+        """
+        select_table_names = f"SELECT name FROM system.tables where database = '{self.database}'"
+        response = self.db_client_session.query(select_table_names)
+        return [table_name[0] for table_name in response.result_rows]
+
+
     @retry()
     def create_db(self):
         """
@@ -73,7 +82,7 @@ class DBFuncs(ConfigurationBuilder):
             This method constructs a SQL `CREATE DATABASE IF NOT EXISTS` statement
             using the `self.database` attribute to specify the database name.
 
-            The operation is executed via the `db_session.query` method, which
+            The operation is executed via the `db_client_session.query` method, which
             interacts with the ClickHouse server to create the database.
 
             If the database creation fails, the `retry` decorator will automatically
@@ -83,7 +92,7 @@ class DBFuncs(ConfigurationBuilder):
                 Exception: If all retry attempts fail, the last exception is raised.
         """
         create_db = f"CREATE DATABASE IF NOT EXISTS {self.database}"
-        self.db_session.query(create_db)
+        self.db_client_session.query(create_db)
 
 
     @retry()
@@ -115,7 +124,7 @@ class DBFuncs(ConfigurationBuilder):
                                     PARTITION BY toYYYYMM(Open_time) \
                                     ORDER BY (Open_time);"
 
-        self.db_session.query(create_tab_request)
+        self.db_client_session.query(create_tab_request)
 
 
     def drop_table(self, suffix=''):
@@ -132,7 +141,7 @@ class DBFuncs(ConfigurationBuilder):
         drop_request = f"""
                         DROP TABLE IF EXISTS {self.get_tablename()}{suffix};
                     """
-        self.db_session.query(drop_request)
+        self.db_client_session.query(drop_request)
 
 
     @retry()
@@ -142,7 +151,7 @@ class DBFuncs(ConfigurationBuilder):
 
             This method attempts to insert the provided data tuples into a table
             formatted with the current database, currency, and interval. It uses
-            the `self.db_session.insert` method to perform the insertion, with column
+            the `self.db_client_session.insert` method to perform the insertion, with column
             names specified by `self.__column_names`.
 
             Parameters:
@@ -152,7 +161,7 @@ class DBFuncs(ConfigurationBuilder):
                 SomeException: If the insertion fails, retries according to the retry policy.
         """
 
-        self.db_session.insert(
+        self.db_client_session.insert(
             f'{self.get_tablename()}',
             data_tuples,
             column_names=[column[0] for column in self.table_columns]
@@ -175,7 +184,7 @@ class DBFuncs(ConfigurationBuilder):
                             WHERE Open_time >= '{self.start.strftime('%Y-%m-%d %H:%M:%S')}' 
                             AND Open_time <= '{self.end.strftime('%Y-%m-%d %H:%M:%S')}'
                           """
-        self.db_session.query(remove_request)
+        self.db_client_session.query(remove_request)
 
 
     def get_databases(self, filter_name: str = None):
@@ -202,7 +211,7 @@ class DBFuncs(ConfigurationBuilder):
             query += f" LIKE '{filter_name}'"
 
         # Execute the query
-        all_databases = self.db_session.query(query).result_rows
+        all_databases = self.db_client_session.query(query).result_rows
 
         # Return databases that are not in the technical databases list
         return [db[0] for db in all_databases if db[0] not in self.__tech_db]
@@ -227,7 +236,7 @@ class DBFuncs(ConfigurationBuilder):
         backup_request = f"BACKUP DATABASE {self.database} TO Disk('backups', '{backup_name}')"
 
         # Execute the backup command using the current database session
-        self.db_session.command(backup_request)
+        self.db_client_session.command(backup_request)
 
         # Return the name of the created backup file for reference
         return backup_name
@@ -253,7 +262,7 @@ class DBFuncs(ConfigurationBuilder):
         restore_query = f"RESTORE DATABASE {self.database} FROM {backup_path}"
 
         # Execute the restore command using the current database session
-        self.db_session.command(restore_query)
+        self.db_client_session.command(restore_query)
 
 
     @retry()
@@ -272,7 +281,7 @@ class DBFuncs(ConfigurationBuilder):
                 pd.DataFrame: A DataFrame containing all columns and rows from the specified ClickHouse table.
                 The DataFrame columns are named according to the columns in the ClickHouse table.
         """
-        ch_response = self.db_session.query(f"""
+        ch_response = self.db_client_session.query(f"""
                                     SELECT *
                                     FROM {self.get_tablename()}
                                 """)
@@ -301,7 +310,7 @@ class DBFuncs(ConfigurationBuilder):
                 Exception: If the query fails, the `retry` decorator will handle the retry logic
                            according to the specified retry policy.
         """
-        end_time = self.db_session.query(f"""
+        end_time = self.db_client_session.query(f"""
                     SELECT {method}(Open_time) 
                     FROM {self.get_tablename()}
                 """).result_rows[0][0]
@@ -419,7 +428,7 @@ class DBFuncs(ConfigurationBuilder):
         get_records_count_request = self._build_get_records_count_request()
 
         ch_response_df = pd.DataFrame(
-            self.db_session.query(get_records_count_request).result_rows,
+            self.db_client_session.query(get_records_count_request).result_rows,
             columns=['month_where_lacks', 'interval', 'currency', 'rows_amount']
         )
 
@@ -442,7 +451,7 @@ class DBFuncs(ConfigurationBuilder):
                             SELECT count(Open_time) 
                             FROM {self.get_tablename()}
                         """
-        return self.db_session.query(query_count_open_time).result_rows[0][0]
+        return self.db_client_session.query(query_count_open_time).result_rows[0][0]
 
 
     @retry()
@@ -461,7 +470,7 @@ class DBFuncs(ConfigurationBuilder):
                     - count: The number of times the `Open_time` appears in the table.
         """
         # Get data from db
-        ch_response = self.db_session.query(f"""
+        ch_response = self.db_client_session.query(f"""
                                     SELECT Open_time, COUNT(*) AS count
                                     FROM {self.get_tablename()}
                                     GROUP BY Open_time
@@ -510,7 +519,7 @@ class DBFuncs(ConfigurationBuilder):
                 Open_time
             """
 
-        self.db_session.query(insert_tab_request)
+        self.db_client_session.query(insert_tab_request)
 
         # Rename tables
         rename_request = f"""
@@ -518,7 +527,7 @@ class DBFuncs(ConfigurationBuilder):
                 {self.get_tablename()} TO {self.get_tablename()}_old, 
                 {self.get_tablename()}_no_duplicates TO {self.get_tablename()};
         """
-        self.db_session.query(rename_request)
+        self.db_client_session.query(rename_request)
 
         # Drop table with suffix='_old'
         self.drop_table(suffix='_old')

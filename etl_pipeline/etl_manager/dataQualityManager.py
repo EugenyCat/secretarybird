@@ -1,6 +1,6 @@
 import logging
 from etl_pipeline.etl_manager.baseManager import BaseManager
-from etl_pipeline.helpers.elt_utils import ETLUtils
+from etl_pipeline.helpers.utils import ETLUtils
 import pandas as pd
 import os
 from datetime import datetime, timezone, timedelta

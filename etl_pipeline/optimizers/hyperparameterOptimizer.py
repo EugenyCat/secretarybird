@@ -1,7 +1,7 @@
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from ml_pipeline.ml_models.modelFactory import ModelFactory
+from etl_pipeline.ml_models.modelFactory import ModelFactory
 
 
 class HyperparameterOptimizer:

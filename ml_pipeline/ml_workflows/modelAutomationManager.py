@@ -1,62 +1,89 @@
+from ml_pipeline.helpers.ml_setup import ConfigurationBuilder
+from system_files.constants.constants import JSON_EXTRACT_ML_SETTINGS
+from ml_pipeline.helpers.dbFuncs import DBFuncs
+import json
+
 import torch
 from ml_pipeline.ml_models.modelFactory import ModelFactory
 from ml_pipeline.ml_manager.modelTrainerManager import ModelTrainer
 from ml_pipeline.ml_manager.modelEvaluatorManager import ModelEvaluator
 from ml_pipeline.ml_manager.modelRegistryManager import modelRegistryManager
+
 from ml_pipeline.optimizers.hyperparameterOptimizer import HyperparameterOptimizer
 
-class ModelAutomationManager:
+import logging
+
+class ModelAutomationManager(ConfigurationBuilder):
     """
-    Класс для автоматизации процесса обучения, оптимизации гиперпараметров, 
-    оценки, сохранения и предсказания с использованием заданной модели (например, LSTMWithAttentionModel).
-    Интегрирует различные компоненты проекта для реализации полного пайплайна.
+        Класс для автоматизации процесса обучения, оптимизации гиперпараметров,
+        оценки, сохранения и предсказания с использованием заданной модели (например, LSTMWithAttentionModel).
+        Интегрирует различные компоненты проекта для реализации полного пайплайна.
 
-    Атрибуты:
-        model (BaseModel): Модель машинного обучения, которую нужно автоматизировать (например, LSTMWithAttentionModel).
-        trainer (ModelTrainerManager): Управляет обучением модели.
-        evaluator (ModelEvaluatorManager): Управляет оценкой модели.
-        registry (ModelRegistryManager): Управляет регистрацией и сохранением модели.
-        optimizer (HyperparameterOptimizer): Оптимизирует гиперпараметры модели.
+        Атрибуты:
+            model (BaseModel): Модель машинного обучения, которую нужно автоматизировать (например, LSTMWithAttentionModel).
+            trainer (ModelTrainerManager): Управляет обучением модели.
+            evaluator (ModelEvaluatorManager): Управляет оценкой модели.
+            registry (ModelRegistryManager): Управляет регистрацией и сохранением модели.
+            optimizer (HyperparameterOptimizer): Оптимизирует гиперпараметры модели.
     """
 
-    def __init__(self, model_name, model_params, data, hyperparam_space):
-        """
-        Инициализация ModelAutomationManager с заданным классом модели, параметрами и данными.
+    __SOURCE_NAME = 'ml_timeseries'
 
-        Аргументы:
-            model_class (class): Класс модели, которую нужно создать (например, LSTMWithAttentionModel).
-            model_params (dict): Параметры для инициализации модели.
-            data (dict): Словарь, содержащий 'X_train', 'y_train', 'X_test' и 'y_test'.
-            hyperparam_space (dict): Пространство для поиска гиперпараметров.
+    def __init__(self):
+        # Initialize the parent classes
+        ConfigurationBuilder.__init__(self)  # Call the initialization method for ConfigurationBuilder
+
+        # path to json file that contains settings for etl
+        self.load_params = json.load(
+            open(JSON_EXTRACT_ML_SETTINGS, 'r')
+        )[self.__SOURCE_NAME]
+
+
+    def setup(self):
+        # , model_name, model_params, data, hyperparam_space
+        """
+            Инициализация ModelAutomationManager с заданным классом модели, параметрами и данными.
+
+            Аргументы:
+                model_class (class): Класс модели, которую нужно создать (например, LSTMWithAttentionModel).
+                model_params (dict): Параметры для инициализации модели.
+                data (dict): Словарь, содержащий 'X_train', 'y_train', 'X_test' и 'y_test'.
+                hyperparam_space (dict): Пространство для поиска гиперпараметров.
         """
 
-        """
-        создается модель с какими-то начальными параметрами 
-        - либо использовать последние лучшие параметры лучшей модели - либо какой то дефолтный набор
-        """
-        # todo: как организовать передачу параметров в даге? надо понять где в каком виде будут храниться model_name, model_params, hyperparam_space
-        # todo: add a method that read the db, find the model_name with the best/default params
-        self.model = ModelFactory().create_model(model_name, **model_params)
+        self.set_database(self.load_params['database'])
+        self.set_db_session(self.clickhouse_conn.get_sqlalchemy_session(self.database))
 
-        """ self.trainer у него просто метод train_model() который возвращает обученную модель (та же модель с вызванным train) """
+        db_funcs = DBFuncs().set_db_session(self.db_session)
+
+        result_model_and_best_params = db_funcs.find_model_and_best_params({'model_name': self.modelname})
+        logging.warning(f'!!! {result_model_and_best_params}')
+        best_params = result_model_and_best_params['model_params'] or {}
+        hyperparam_space = json.loads(result_model_and_best_params['hyperparam_space'])
+
+        self.set_model(ModelFactory().create_model(self.modelname, **best_params))
+
         self.trainer = ModelTrainer()
 
-        """ self.evaluator объект который будет оценивать качество модели """
-        # todo: make more flexible for different models and more task_type
-        self.evaluator = ModelEvaluator(self.model, task_type='regression')
+        self.evaluator = ModelEvaluator(self.model)
 
         """ self.registry будет отвечать за сохранение модели"""
-        # todo: доработать , где и как будет храниться, (бекапы ?? бекап бд будет достаточно ?), как загружать заново
-        # как организовать дальнейшее взаимодействие со старыми моделями ? (отдельный интерфейс который просто берет лучшую/посл модель и получает прогноз)
         self.registry = modelRegistryManager()
+
+
 
         """ self.optimizer - оптимизатор который должен искать лучшие параметры """
         # todo: надо сделать Bayesian Optimization и Optuna и Ray Tune (также torch.optim, мб кто еще ) : и смотреть на практике кто оптимальнее
         # todo: там уже внутри есть ошибка что у model вызывается метод parametres - надо написать HyperparameterOptimizer корректно в соответсвт с интерфесвом ML моделей
-        self.optimizer = HyperparameterOptimizer(model_name, hyperparam_space, data) # todo create flexible barian
+        self.optimizer = HyperparameterOptimizer(self.modelname, hyperparam_space, data) # todo create flexible barian
+
+        return 0
 
         # просто сетка данных
         # todo: переделать в параметры типа currency interval и загружать из бд
+        # в базе данных добавить в таблицу models_training поле данные на которых было обучение "BTCUSDT_1h" и именно по нему делать поиск лучших
+        # создать функционал который загрузит данные эти
+        # идея что модели будут под конкретные данные
         self.data = data
 
     def automate(self):
@@ -91,6 +118,18 @@ class ModelAutomationManager:
             "predictions": predictions
         }
 
+    def run(self, params):
+        # call validate params validated_params = self.validate_params(params)
+        validated_params = params
+
+        (
+            self.set_modelname(validated_params['modelname'])
+            .set_currency(validated_params['currency'])
+            .set_interval(validated_params['interval'])
+        )
+
+        self.setup()
+
 # Пример использования:
 data = {
     "X_train": torch.randn(100, 10, 5),
@@ -107,12 +146,12 @@ hyperparam_space = {
 }
 
 # Инициализация и запуск автоматизации
-manager = ModelAutomationManager(
-    model_name='lstm_attention',
-    model_params={"input_dim": 5, "hidden_dim": 64, "num_layers": 2, "output_dim": 1},
-    data=data,
-    hyperparam_space=hyperparam_space
-)
+manager = ModelAutomationManager()
+manager.run({
+    "modelname": "lstm_attention",
+    "currency": "btcusdt",
+    "interval": "1h"
+})
 
-result = manager.automate()
-print(result)
+#result = manager.automate()
+#print(result)
