@@ -4,6 +4,7 @@ clickhouse-driver==0.2.7
 clickhouse-connect==0.7.15
 clickhouse-sqlalchemy==0.3.2
 cryptography==42.0.8
+matplotlib==3.9.2
 python-dotenv==0.21.0
 docker==7.1.0
 pandas==2.2.2

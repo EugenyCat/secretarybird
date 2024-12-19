@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 from etl_pipeline.ml_models.modelFactory import ModelFactory
+import logging
 
 
 class HyperparameterOptimizer:
@@ -81,3 +82,27 @@ class HyperparameterOptimizer:
                         }
 
         return best_params, best_score
+
+
+
+    def _validate_params(self, model, params):
+        """
+            Validates that the provided parameters are compatible with the model.
+
+            Args:
+                model (object): The model instance implementing the `get_hyperparameter_keys` method.
+                params (dict): Dictionary of hyperparameters to validate.
+
+            Raises:
+                ValueError: If some required parameters are missing.
+        """
+        if not hasattr(model, 'get_hyperparameter_keys'):
+            raise AttributeError(f"Model '{model.__str__()}' does not implement 'get_hyperparameter_keys'.")
+
+        required_keys = model.get_hyperparameter_keys()
+        missing_keys = [key for key in required_keys if key not in params]
+
+        if missing_keys:
+            raise ValueError(f"Missing required parameters for model '{model.__str__()}': {missing_keys}")
+
+        logging.info(f"Parameters validated successfully for model '{model.__str__()}'.")

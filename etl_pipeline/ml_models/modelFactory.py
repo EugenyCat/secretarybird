@@ -1,36 +1,87 @@
 from etl_pipeline.ml_models.lstmWithAttentionModel.LSTMWithAttentionModel import LSTMWithAttentionModel
+import logging
+
 
 class ModelFactory:
     """
-        В этом классе будет использоваться паттерн Factory Method для создания объектов моделей. Это позволит легко добавлять новые модели в будущем, без изменений в существующем коде.
+        A factory class for creating machine learning models based on the specified type.
+
+        This class uses the Factory Method design pattern to create and manage different types of models.
+        Adding new models is straightforward: simply register the model class in the `model_registry` dictionary.
+
+        Example:
+            model = ModelFactory.create_model("lstm_attention", input_dim=128, hidden_dim=64)
+
+        Benefits:
+        - **Scalability**: Adding new models requires minimal code changes.
+        - **Encapsulation**: Creation details of each model are abstracted, making the interface cleaner.
+        - **Flexibility**: Dynamically supports a variety of models based on configuration.
+
+        Methods:
+        - `create_model`: Creates a model based on the specified type and parameters.
+        - `get_supported_models`: Returns a list of all supported model types.
+        - `is_model_supported`: Checks if a specific model type is supported.
     """
-    @staticmethod
-    def create_model(model_type, **kwargs):
-        if model_type == 'lstm_attention':
-            return LSTMWithAttentionModel(**kwargs)
-        # Добавьте другие модели по мере необходимости
-        raise ValueError(f"Unknown model type: {model_type}")
+    # Registry of model types
+    __model_registry = {
+        "lstm_attention": LSTMWithAttentionModel,
+        # Add other model classes here
+    }
+
+    @classmethod
+    def create_model(cls, model_type, **kwargs):
+        """
+            Creates and returns an instance of the specified model type.
+
+            Args:
+                model_type (str): The type of the model to create (e.g., 'lstm_attention').
+                **kwargs: Additional arguments required for initializing the model.
+
+            Returns:
+                object: An instance of the requested model.
+
+            Raises:
+                ValueError: If the specified model type is not supported.
+        """
+        model_class = cls.__model_registry.get(model_type)
+        if not model_class:
+            raise ValueError(
+                f"Unknown model type: '{model_type}'. "
+                f"Use 'get_supported_models()' to see available options."
+            )
+
+        # Log model creation
+        logging.info(f"{cls.__str__()} Creating model: {model_type} with parameters: {kwargs}")
+
+        # Create and return the model instance
+        return model_class(**kwargs)
 
 
-###########################
-"""
-ModelFactory использует метод create_model, чтобы на основе строки (например, 'lstm_attention') 
-возвращать соответствующую модель. 
+    @classmethod
+    def get_supported_models(cls):
+        """
+            Returns a list of supported model types.
 
-В будущем можно добавить другие модели, просто дополнив этот метод.
-"""
+            Returns:
+                list: A list of strings representing the supported model types.
+        """
+        return list(cls.__model_registry.keys())
 
-"""
-Этот файл реализует фабричный метод для создания моделей. 
-В нем можно организовать логику для создания различных моделей на основе переданных параметров. 
-Например, если вам нужно создать модель LSTM или Ridge, 
-фабрика будет ответственна за создание нужной модели с правильными гиперпараметрами.
 
-Почему он нужен:
+    @classmethod
+    def is_model_supported(cls, model_type):
+        """
+            Checks if a specific model type is supported by the factory.
 
-Гибкость: Это позволяет динамически создавать нужную модель, не вмешиваясь в код, который использует эти модели. 
-Например, для каждого типа модели можно определить отдельную фабричную функцию.
+            Args:
+                model_type (str): The model type to check.
 
-Инкапсуляция: Все детали создания модели (гиперпараметры, архитектура, и т.д.) скрыты внутри фабрики, 
-что упрощает дальнейшую модификацию или добавление новых типов моделей без изменений в других частях кода.
-"""
+            Returns:
+                bool: True if the model type is supported, False otherwise.
+        """
+        return model_type in cls.__model_registry
+
+
+    @classmethod
+    def __str__(cls):
+        return "[ModelFactory]"

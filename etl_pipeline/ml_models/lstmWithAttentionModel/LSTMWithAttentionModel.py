@@ -10,8 +10,6 @@ class LSTMWithAttentionModel(BaseModel):
         the required methods for training, prediction, and saving/loading model states.
     """
 
-    def __str__(self):
-        return 'lstm_attention'
 
     def __init__(self, input_dim=10, hidden_dim=64, num_layers=2, output_dim=1):
         """
@@ -36,6 +34,28 @@ class LSTMWithAttentionModel(BaseModel):
 
         # Линейный слой для получения итогового предсказания
         self.fc = nn.Linear(hidden_dim, output_dim)
+
+
+    def get_hyperparameter_keys(self):
+        """
+            Returns a list of all required hyperparameters for the model.
+
+            Returns:
+                List[str]: List of hyperparameter keys.
+        """
+        return [
+            "input_dim",
+            "hidden_dim",
+            "num_layers",
+            "output_dim",
+            "epochs",
+            "learning_rate",
+            "batch_size",
+            "dropout_rate",
+            "optimizer",
+            "attention_dim"
+        ]
+
 
     def forward(self, x):
         """
@@ -117,3 +137,7 @@ class LSTMWithAttentionModel(BaseModel):
         - model_path (str): Путь к сохраненной модели.
         """
         self.load_state_dict(torch.load(model_path))
+
+
+    def __str__(self):
+        return 'lstm_attention'

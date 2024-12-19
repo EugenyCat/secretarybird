@@ -1,34 +1,42 @@
-from etl_pipeline.ml_models.modelFactory import ModelFactory
+import logging
 
 class ModelTrainer:
+    """
+        A class responsible for training machine learning models.
+    """
 
-    def train_model(self, model_type, X_train, y_train, best_params):
+    def train_model(self, model, X_train, y_train, best_params):
         """
-        Обучает модель с использованием переданных лучших гиперпараметров.
+            Trains a machine learning model using the provided training data and best hyperparameters.
 
-        Аргументы:
-            model_type (class): Тип модели для обучения.
-            X_train (array): Данные для обучения.
-            y_train (array): Целевые значения для обучения.
-            best_params (dict): Лучшие параметры для модели, полученные от оптимизатора.
+            Args:
+                model (object): The model to be trained (e.g., <class 'etl_pipeline.ml_models.lstmWithAttentionModel).
+                X_train (array-like): Features for training the model.
+                y_train (array-like): Target values for training the model.
+                best_params (dict): Best hyperparameters for the model.
 
-        Возвращает:
-            model: Обученную модель.
+            Returns:
+                model: The trained model.
+
+            Raises:
+                ValueError: If the dimensions of X_train and y_train do not match.
+                RuntimeError: If an error occurs during model training.
         """
-        # Проверка соответствия размеров X_train и y_train
+        # Validate input dimensions
         if X_train.shape[0] != y_train.shape[0]:
-            raise ValueError("Количество примеров в X_train и y_train должно совпадать.")
+            raise ValueError(f"{self.__str__()} The number of samples in X_train and y_train must match.")
 
-        # Создание модели
-        model = ModelFactory().create_model(model_type)
 
-        # Обучение модели
+        # Train the model
         try:
             model.train(X_train, y_train, **best_params)
+            logging.info(f"Model '{model.__str__()}' trained successfully with parameters: {best_params}")
         except Exception as e:
-            raise RuntimeError(f"Ошибка при обучении модели: {e}")
-
-        # Логирование информации о завершении обучения
-        print(f"Модель {model_type} успешно обучена с параметрами: {best_params}")
+            logging.error(f"Error during training of model '{model.__str__()}': {e}")
+            raise RuntimeError(f"Error during model training: {e}")
 
         return model
+
+
+    def __str__(self):
+        return "[ModelTrainer]"

@@ -134,6 +134,9 @@ class ModelAutomationManager(ConfigurationBuilder):
 
             # Extract the best parameters and hyperparameter space
             best_params = result_model_and_best_params['result']['model_params'] or {}
+            if not best_params:
+                logging.info(f"{self.__str__()} Best parameters not found.") # todo: improve this log
+
             hyperparam_space = json.loads(result_model_and_best_params['result']['hyperparam_space'])
 
             # Create and set the model using ModelFactory
@@ -145,7 +148,7 @@ class ModelAutomationManager(ConfigurationBuilder):
             # Initialize the evaluator for evaluating the model's performance
             self.evaluator = ModelEvaluator(self.model)
 
-            # Initialize the registry manager for saving and managing models
+            # Initialize the registry manager for saving and managing models todo: continue here
             self.registry = modelRegistryManager()
 
             # Initialize the hyperparameter optimizer
@@ -155,7 +158,7 @@ class ModelAutomationManager(ConfigurationBuilder):
 
         except Exception as e:
             # Handle unexpected errors during the setup process
-            return None, {"status": "error", "message": "Unexpected error during setup: {str(e)}"}
+            return None, {"status": "error", "message": f"Unexpected error during setup: {str(e)}"}
 
         # Return success response if setup completes successfully
         return {'status': 'success', 'result': 'Setup is completed successfully.'}, None
