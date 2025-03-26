@@ -10,8 +10,8 @@ from airflow.utils.trigger_rule import TriggerRule
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.insert(0, parent_dir)
 
-from etl_pipeline.etl_manager.clickHouseBackupManager import ClickHouseBackupManagerFacade
-from etl_pipeline.etl_manager.grafanaBackupManager import GrafanaBackupManagerFacade
+from pipeline.etl_manager.clickHouseBackupManager import ClickHouseBackupManagerFacade
+from pipeline.etl_manager.grafanaBackupManager import GrafanaBackupManagerFacade
 
 API_NAME_LIST = ['binance_api']
 
