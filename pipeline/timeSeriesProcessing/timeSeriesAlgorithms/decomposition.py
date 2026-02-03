@@ -1,10 +1,9 @@
-
+﻿# -----------------------------------------------------------------------------
+# Class for detrending and decomposition
+# TrendDecomposer and decomposition strategies (STL, SSA, Fourier, etc.)
 # -----------------------------------------------------------------------------
-# Класс для детрендинга и декомпозиции
-# TrendDecomposer и стратегии декомпозиции (STL, SSA, Fourier и пр.)
-# -----------------------------------------------------------------------------
 
-from pipeline.ts_preprocessing.periodicity import PeriodicityDetector
+from pipeline.ts_preprocesser_manager_old_2.periodicity import PeriodicityDetector
 import pandas as pd
 import numpy as np
 import logging
@@ -32,25 +31,27 @@ class TrendDecomposer:
 
     def __init__(self, interval):
         self.interval = interval
+        self.last_used_method = None  # Add this attribute
+        self.last_params = {}  # Add this attribute
 
     def detrend_series(self, data: pd.Series, method='linear'):
-        logging.debug("Начало детрендинга методом: %s", method)
+        logging.debug("Starting detrending with method: %s", method)
         if method == 'linear':
             x = np.arange(len(data))
             coeffs = np.polyfit(x, data.values, 1)
             trend = np.polyval(coeffs, x)
             detrended = data - trend
-            logging.debug("Линейный детрендинг завершён.")
+            logging.debug("Linear detrending completed.")
             return detrended, pd.Series(trend, index=data.index)
         elif method == 'difference':
             detrended = data.diff().dropna()
-            logging.debug("Детрендинг через разности завершён.")
+            logging.debug("Detrending via differences completed.")
             return detrended, data.iloc[0]
         else:
             raise ValueError("Unsupported detrending method. Choose 'linear' or 'difference'.")
 
     def inverse_detrend(self, detrended_data, trend_component, method='linear'):
-        logging.debug("Выполняется обратное детрендинг методом: %s", method)
+        logging.debug("Performing inverse detrending with method: %s", method)
         if method == 'linear':
             return detrended_data + trend_component
         elif method == 'difference':
@@ -59,15 +60,25 @@ class TrendDecomposer:
             raise ValueError("Unsupported inverse detrending method. Choose 'linear' or 'difference'.")
 
     def decompose_series(self, data: pd.Series, method='auto'):
-        logging.debug("Начало декомпозиции временного ряда (метод: %s).", method)
+        logging.debug("Starting time series decomposition (method: %s).", method)
         if not isinstance(data.index, pd.DatetimeIndex):
             raise ValueError("Data must have a DatetimeIndex for seasonal decomposition.")
         adf_pvalue = adfuller(data.dropna())[1]
         model_type = 'additive' if adf_pvalue < 0.05 else 'multiplicative'
-        # Определяем период – здесь используется упрощённая версия
+        # Determine period – here a simplified version is used
         period, period_candidates = self._determine_period(data)
         method_to_use = self._determine_method_auto(data, period, period_candidates) if method == 'auto' else method
-        logging.debug("Выбран метод декомпозиции: %s", method_to_use)
+
+        logging.debug("Selected decomposition method: %s", method_to_use)
+
+        # Save the used method
+        self.last_used_method = method_to_use
+        self.last_params = {
+            'period': period,
+            'model_type': model_type,
+            'period_candidates': period_candidates
+        }
+
         decomposition_methods = {
             'STL': self._decompose_stl,
             'TBATS': self._decompose_tbats,
@@ -75,6 +86,7 @@ class TrendDecomposer:
             'fourier': self._decompose_fourier,
             'prophet': self._decompose_prophet
         }
+
         if method_to_use in decomposition_methods:
             return decomposition_methods[method_to_use](
                 data=data,
@@ -97,23 +109,23 @@ class TrendDecomposer:
             except Exception as e:
                 quality[m] = np.inf
         chosen = min(quality, key=quality.get)
-        logging.debug("Метрики качества декомпозиции: %s, выбран метод: %s", quality, chosen)
+        logging.debug("Decomposition quality metrics: %s, selected method: %s", quality, chosen)
         return chosen
 
     def _determine_period(self, data):
-        # Используем PeriodicityDetector, ACF и FFT
-        # (Предполагается, что PeriodicityDetector определён где-то в окружении)
+        # Use PeriodicityDetector, ACF, and FFT
+        # (Assumed that PeriodicityDetector is defined somewhere in the environment)
         detector = PeriodicityDetector(min_period=2, max_period=None, cv=10)
         detector.fit(data)
         period_detector = detector.predict(data)
         period_candidates = []
         if period_detector > 1:
-            logging.debug(f"Применение PeriodicityDetector: {period_detector}")
+            logging.debug(f"Applying PeriodicityDetector: {period_detector}")
             period_candidates.append(period_detector)
         acf_vals = acf(data.dropna(), nlags=min(100, len(data) // 2))
         for lag, val in enumerate(acf_vals[1:], start=1):
             if val > 0.3:
-                logging.debug(f"[LOG] Применение ACF: выбран lag={lag}")
+                logging.debug(f"[LOG] Applying ACF: selected lag={lag}")
                 period_candidates.append(lag)
                 break
         fft_data = data.dropna().values
@@ -125,43 +137,43 @@ class TrendDecomposer:
                 index_candidate = len(freqs) - 1
             dominant_freq = freqs[index_candidate]
             default_max_period = {
-                '1h': 168,  # 24*7 – неделя для часовых данных
-                '12h': 60,  # примерно 30 дней
-                '1d': 182,  # примерно полгода для ежедневных данных
-                '3d': 60,  # примерно 180 дней/3 ≈ 60 наблюдений для 3-дневного интервала
-                '1w': 52,  # 52 недели (год) для недельных данных
-                '1M': 12  # 12 месяцев для месячных данных
+                '1h': 168,  # 24*7 – week for hourly data
+                '12h': 60,  # approximately 30 days
+                '1d': 182,  # approximately half a year for daily data
+                '3d': 60,  # approximately 180 days/3 ≈ 60 observations for 3-day interval
+                '1w': 52,  # 52 weeks (year) for weekly data
+                '1M': 12  # 12 months for monthly data
             }
             max_allowed_period = default_max_period.get(self.interval, len(data) / 2)
             if dominant_freq > 0:
                 period_fft = int(round(1 / dominant_freq))
                 if period_fft < max_allowed_period:
-                    # print(f"[LOG] Применение FFT: период={period_fft}")
+                    # print(f"[LOG] Applying FFT: period={period_fft}")
                     period_candidates.append(period_fft)
                 else:
-                    logging.debug(f"[LOG] Игнорируем кандидат FFT: {period_fft} (превышает порог)")
+                    logging.debug(f"[LOG] Ignoring FFT candidate: {period_fft} (exceeds threshold)")
         if period_candidates:
             period = int(np.round(np.median(period_candidates)))
         else:
             period = 0
         if period < 2:
-            logging.debug("[LOG] Применение Фолбэка для периода")
+            logging.debug("[LOG] Applying fallback for period")
             default_periods = {'1h': 24, '12h': 14, '1d': 7, '3d': 7, '1w': 52, '1M': 12}
             period = default_periods.get(self.interval, 1)
-        logging.debug(f"[LOG] Определённый период: {period}, кандидаты: {period_candidates}")
+        logging.debug(f"[LOG] Determined period: {period}, candidates: {period_candidates}")
         return period, period_candidates
 
 
     def _decompose_stl(self, data, period, **kwargs):
-        logging.debug("Начало STL декомпозиции.")
+        logging.debug("Starting STL decomposition.")
         from statsmodels.tsa.seasonal import STL
         stl = STL(data, period=period, robust=True)
         result = stl.fit()
-        logging.debug("STL декомпозиция завершена.")
+        logging.debug("STL decomposition completed.")
         return result.trend, result.seasonal, result.resid
 
     def _decompose_tbats(self, data, period, candidates, **kwargs):
-        logging.debug("Начало TBATS декомпозиции.")
+        logging.debug("Starting TBATS decomposition.")
         from tbats import TBATS
         seasonal_periods = candidates if len(candidates) > 1 else [period]
         seasonal_periods = [24, 168] if seasonal_periods == [period] and period == 24 else seasonal_periods
@@ -174,24 +186,24 @@ class TrendDecomposer:
             seasonal_array = np.zeros_like(fitted)
         trend_array = fitted - seasonal_array
         resid_array = data.values.flatten() - fitted
-        logging.debug("TBATS декомпозиция завершена.")
+        logging.debug("TBATS decomposition completed.")
         trend = pd.Series(trend_array, index=data.index)
         seasonal = pd.Series(seasonal_array, index=data.index)
         resid = pd.Series(resid_array, index=data.index)
         return trend, seasonal, resid
 
     def _decompose_ssa(self, data, period, **kwargs):
-        logging.debug("Начало SSA декомпозиции.")
+        logging.debug("Starting SSA decomposition.")
         return self.ssa_decompose(data, window_length=period, variance_threshold=0.9)
 
     def _decompose_fourier(self, data, period, **kwargs):
-        logging.debug("Начало Fourier декомпозиции.")
+        logging.debug("Starting Fourier decomposition.")
         result = self.fourier_decompose(data, period=period)
-        logging.debug("Fourier декомпозиция завершена")
+        logging.debug("Fourier decomposition completed")
         return result
 
     def _decompose_prophet(self, data, **kwargs):
-        logging.debug("Начало Prophet декомпозиции.")
+        logging.debug("Starting Prophet decomposition.")
         from prophet import Prophet
         df = pd.DataFrame(data)
         df.reset_index(inplace=True)
@@ -212,7 +224,7 @@ class TrendDecomposer:
         trend_series = pd.Series(forecast['trend'].values, index=data.index)
         seasonal_series = pd.Series(forecast[components].sum(axis=1).values, index=data.index)
         resid_series = pd.Series((df['y'] - forecast['trend'] - forecast[components].sum(axis=1)).values, index=data.index)
-        logging.debug("Prophet декомпозиция завершена.")
+        logging.debug("Prophet decomposition completed.")
         return trend_series, seasonal_series, resid_series
 
     def get_seasonality_config(self, interval, data_length):
@@ -230,7 +242,7 @@ class TrendDecomposer:
         return config
 
     def fourier_decompose(self, data, period):
-        logging.debug("Детализированное Fourier декомпозиция начинается.")
+        logging.debug("Detailed Fourier decomposition starting.")
         data_series = pd.Series(data.values.flatten(), index=data.index)
         df = pd.DataFrame({'y': data_series.values}, index=data_series.index)
         t = np.arange(len(df))
@@ -253,13 +265,13 @@ class TrendDecomposer:
         params = best_model.params
         trend_values = best_X[:, 1] * params[1] + best_X[:, 0]
         seasonal_values = best_X[:, 2:] @ params[2:]
-        logging.debug("Fourier декомпозиция завершена.")
+        logging.debug("Fourier decomposition completed.")
         return (pd.Series(trend_values, index=df.index),
                 pd.Series(seasonal_values, index=df.index),
                 data_series - pd.Series(trend_values, index=df.index) - pd.Series(seasonal_values, index=df.index))
 
     def ssa_decompose(self, data, window_length=None, variance_threshold=0.9):
-        logging.debug("Начало SSA декомпозиции.")
+        logging.debug("Starting SSA decomposition.")
         series = data.values.flatten() if isinstance(data, pd.Series) else np.array(data).flatten()
         N = series.shape[0]
         if window_length is None:
@@ -283,7 +295,7 @@ class TrendDecomposer:
             trend_reconstructed = reconstructed
             seasonal_reconstructed = np.zeros_like(reconstructed)
         residual = series - reconstructed
-        logging.debug("SSA декомпозиция завершена.")
+        logging.debug("SSA decomposition completed.")
         if hasattr(data, 'index'):
             trend_reconstructed = pd.Series(trend_reconstructed, index=data.index)
             seasonal_reconstructed = pd.Series(seasonal_reconstructed, index=data.index)
