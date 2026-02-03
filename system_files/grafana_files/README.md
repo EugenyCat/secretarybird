@@ -1,30 +1,34 @@
 # secretarybird
 
-### Подключение Grafana к ClickHouse
-1. Откройте Grafana по адресу [http://localhost:3000](http://localhost:3000) и авторизуйтесь.
-2. Перейдите в **Configuration > Data Sources**.
-3. Нажмите **Add data source** и выберите **Altinity plugin for ClickHouse** из списка доступных источников данных.
+### Connecting Grafana to ClickHouse
 
-#### Настройка подключения:
-- **URL**: Укажите URL ClickHouse (например, `http://<clickhouse-container-name>:8123`).
-- **Default Database**: Введите имя базы данных ClickHouse.
-- **User и Password**: Добавьте учетные данные ClickHouse, если требуется.
+1. Open Grafana at [http://localhost:3000](http://localhost:3000) and log in.
+2. Go to **Configuration > Data Sources**.
+3. Click **Add data source** and select **Altinity plugin for ClickHouse** from the list of available data sources.
 
-#### Проверка:
-- Нажмите **Save & Test** для проверки. Если подключение установлено успешно, источник данных будет готов к использованию.
+#### Connection configuration:
+
+* **URL**: Specify the ClickHouse URL (for example, `http://<clickhouse-container-name>:8123`).
+* **Default Database**: Enter the name of the ClickHouse database.
+* **User and Password**: Add ClickHouse credentials if required.
+
+#### Verification:
+
+* Click **Save & Test** to verify. If the connection is established successfully, the data source will be ready for use.
 
 ---
 
-### Как получить API-ключ через сервисный аккаунт
-1. **Войти в Grafana**:  
-   Перейдите по адресу [http://localhost:3000](http://localhost:3000) и авторизуйтесь.
-2. **Перейти в администрирование**:  
-   В левом боковом меню нажмите на **Home** (или название, которое соответствует главной странице) и выберите **Administration**.
-3. **Создать сервисный аккаунт**:  
-   Перейдите в раздел **Users and access** или **Service accounts**.  
-   Нажмите на кнопку **Create service account**.
-4. **Настройки сервисного аккаунта**:  
-   Укажите имя для аккаунта (например, *Backup Script*).  
-   Задайте необходимые разрешения для этого аккаунта (например, уровень доступа **Admin** или **Editor**), чтобы иметь возможность взаимодействовать с API для получения информации о дашбордах.
-5. **Сохранение ключа**:  
-   После создания аккаунта у вас будет доступ к ключу. Обязательно скопируйте его и сохраните, так как вы не сможете увидеть его снова после этого шага.
+### How to obtain an API key via a service account
+
+1. **Log in to Grafana**:
+   Go to [http://localhost:3000](http://localhost:3000) and log in.
+2. **Go to administration**:
+   In the left sidebar menu, click **Home** (or the name that corresponds to the main page) and select **Administration**.
+3. **Create a service account**:
+   Go to the **Users and access** or **Service accounts** section.
+   Click the **Create service account** button.
+4. **Service account settings**:
+   Specify a name for the account (for example, *Backup Script*).
+   Set the required permissions for this account (for example, **Admin** or **Editor** access level) to be able to interact with the API and retrieve dashboard information.
+5. **Saving the key**:
+   After creating the account, you will have access to the key. Be sure to copy it and store it securely, as you will not be able to view it again after this step.

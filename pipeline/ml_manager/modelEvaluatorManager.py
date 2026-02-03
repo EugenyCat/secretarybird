@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, accuracy_score, f1_score
 from sklearn.model_selection import TimeSeriesSplit
 import matplotlib.pyplot as plt
@@ -35,7 +35,7 @@ class ModelEvaluator:
     def smape(self, y_true, y_pred):
         """
             Calculate the Symmetric Mean Absolute Percentage Error (SMAPE).
-            Вычисление симметричной средней абсолютной процентной ошибки (SMAPE).
+            Calculation of the Symmetric Mean Absolute Percentage Error (SMAPE).
 
             Args:
                 y_true (array-like): True values.
@@ -50,7 +50,7 @@ class ModelEvaluator:
     def theils_u_statistic(self, y_true, y_pred):
         """
             Calculate Theil's U statistic for time series forecasts.
-            Вычисление статистики U по Теилу для оценки прогнозов временных рядов.
+            Calculation of Theil's U statistic for evaluating time series forecasts.
 
             Args:
                 y_true (array-like): True values.
@@ -137,16 +137,16 @@ class ModelEvaluator:
 
     def _evaluate_with_split(self, X, y, split_method, **params):
         """
-            Общая функция для оценки модели с использованием различных методов разделения данных.
+            General function for evaluating the model using various data splitting methods.
 
             Parameters:
-            - X (array-like): Входные данные для обучения и тестирования модели.
-            - y (array-like): Метки данных для обучения и тестирования модели.
-            - split_method (callable): Метод разделения данных (например, TimeSeriesSplit или RollingWindow).
-            - **params: Дополнительные параметры, специфичные для метода разделения.
+            - X (array-like): Input data for training and testing the model.
+            - y (array-like): Data labels for training and testing the model.
+            - split_method (callable): Data splitting method (e.g., TimeSeriesSplit or RollingWindow).
+            - **params: Additional parameters specific to the splitting method.
 
             Returns:
-            - score (float): Общая оценка модели.
+            - score (float): Overall model score.
         """
         score = 0
         for train_idx, test_idx in split_method(X, **params):
@@ -165,7 +165,7 @@ class ModelEvaluator:
 
     def evaluate_using_time_series_split(self, X, y, n_splits=5):
         """
-            Оценка модели с использованием TimeSeriesSplit.
+            Model evaluation using TimeSeriesSplit.
         """
 
         def time_series_split_method(X, **params):
@@ -178,7 +178,7 @@ class ModelEvaluator:
 
     def evaluate_using_rolling_window(self, X, y, window_size=12):
         """
-        Оценка модели с использованием Rolling Window (скользящее окно).
+        Model evaluation using Rolling Window (sliding window).
         """
 
         def rolling_window_method(X, **params):
@@ -194,7 +194,7 @@ class ModelEvaluator:
 
     def evaluate_using_expanding_window(self, X, y):
         """
-        Оценка модели с использованием Expanding Window (расширяющееся окно).
+        Model evaluation using Expanding Window.
         """
 
         def expanding_window_method(X, **params):
@@ -209,7 +209,7 @@ class ModelEvaluator:
 
     def evaluate_using_walk_forward_validation(self, X, y, n_splits=5):
         """
-        Оценка модели с использованием Walk-Forward Validation.
+        Model evaluation using Walk-Forward Validation.
         """
 
         def walk_forward_method(X, **params):
@@ -227,7 +227,7 @@ class ModelEvaluator:
 
     def evaluate_using_backtest(self, X, y, backtest_steps=12):
         """
-        Оценка модели с использованием Backtesting.
+        Model evaluation using Backtesting.
         """
 
         def backtest_method(X, **params):
@@ -243,5 +243,3 @@ class ModelEvaluator:
 
     def __str__(self):
         return "[ModelEvaluator]"
-
-

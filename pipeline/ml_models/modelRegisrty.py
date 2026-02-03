@@ -1,6 +1,6 @@
-class ModelRegistry:
+﻿class ModelRegistry:
     """
-        Этот класс будет отвечать за регистрацию моделей. Например, он может поддерживать словарь моделей, которые используются в проекте, с возможностью добавления новых моделей.
+        This class is responsible for model registration. For example, it can maintain a dictionary of models used in the project, with the ability to add new models.
     """
     def __init__(self):
         self.models = {}
@@ -16,21 +16,21 @@ class ModelRegistry:
 
 ########################
 """
-Реестр хранит модели в словаре и позволяет зарегистрировать новую модель с уникальным именем. 
-Вы можете в любой момент извлечь зарегистрированную модель для дальнейшей работы.
+The registry stores models in a dictionary and allows registering a new model with a unique name. 
+You can retrieve a registered model at any time for further work.
 """
 """
-Назначение:
+Purpose:
 
-Этот файл реализует реестр моделей, в котором модели могут быть зарегистрированы, сохранены и извлечены. 
-Он позволяет централизованно управлять моделями, их состоянием и метаданными.
+This file implements a model registry where models can be registered, saved, and retrieved. 
+It allows centralized management of models, their state, and metadata.
 
-Почему он нужен:
+Why it is needed:
 
-Централизованное управление моделями: Регистрация моделей в реестре позволяет управлять их состоянием в одном месте. 
-Это может быть полезно для мониторинга, деплоя, и последующего использования моделей.
+Centralized model management: Registering models in the registry allows managing their state in one place. 
+This can be useful for monitoring, deployment, and subsequent use of models.
 
-Преимущества для развертывания: 
-Модели, зарегистрированные в реестре, могут быть легко извлечены и использованы для дальнейшего предсказания или сохранения.
+Advantages for deployment: 
+Models registered in the registry can be easily retrieved and used for further prediction or saving.
 
 """

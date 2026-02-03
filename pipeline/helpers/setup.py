@@ -2,6 +2,11 @@ from typing import Protocol
 from pipeline.database.clickHouseConnection import ClickHouseConnection
 from functools import wraps
 import time
+import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Union
+import pandas as pd
+
 
 def retry(retries=5, backoff_factor=0.1):
     """
@@ -40,43 +45,6 @@ def retry(retries=5, backoff_factor=0.1):
     return decorator
 
 
-class ETLProtocol(Protocol):
-    """
-        pattern Abstract Factory
-        ETLProtocol - ETL process interface from different sources
-    """
-
-    def validate_parameters(self, input_params: dict) -> (dict, int):
-        """
-            Validate required parameters
-        """
-        ...
-
-    def extract_data(self) -> (dict or None, None or dict):
-        """
-            Extract data from source
-        """
-        ...
-
-    def transform_data(self, extracted_data: list) -> (dict or None, None or dict):
-        """
-            Transform raw data into a Pandas DataFrame with the correct fieldnames and datatypes.
-        """
-        ...
-
-    def load_data(self, transformed_data: list) -> (dict or None, None or dict):
-        """
-            Insert data into ClickHouse db
-        """
-        ...
-
-    def run_etl(self, input_params: dict) -> (dict, dict):
-        """
-            Orchestrates the entire ETL process: extraction, transformation, and loading of data.
-        """
-        ...
-
-
 class ConfigurationBuilder:
     """
         A builder class for setting various configuration parameters using a fluent interface pattern.
@@ -93,6 +61,7 @@ class ConfigurationBuilder:
         self.database = None
         self.currency = None
         self.interval = None
+        self.processing_stage = None
         self.start = None
         self.end = None
 
@@ -126,6 +95,13 @@ class ConfigurationBuilder:
         self.interval = interval
         return self
 
+    def set_processing_stage(self, processing_stage=None):
+        if processing_stage not in ['raw', 'transformed']:
+            # todo: pass and return error
+            pass
+        self.processing_stage = processing_stage
+        return self
+
     def set_database(self, database=None):
         self.database = database
         return self
@@ -141,3 +117,24 @@ class ConfigurationBuilder:
     def set_data(self, X=None, y=None):
         self.data = {'X': X, 'y': y}
         return self
+
+    def get_ts_id(self) -> str:
+        """
+        Generates a time series ID based on currency and interval.
+
+        Returns:
+            str: The time series ID in the format "currency_interval"
+
+        Raises:
+            ValueError: If currency or interval is not set.
+        """
+        # Validate that currency and interval are set
+        if not self.currency or not self.interval:
+            missing = []
+            if not self.currency:
+                missing.append('currency')
+            if not self.interval:
+                missing.append('interval')
+            raise ValueError(f"Cannot generate ts_id: missing {', '.join(missing)}")
+
+        return f"{self.currency}_{self.interval}"

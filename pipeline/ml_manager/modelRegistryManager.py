@@ -1,4 +1,4 @@
-import mlflow
+﻿import mlflow
 import mlflow.sklearn
 
 
@@ -42,21 +42,21 @@ class modelRegistryManager:
 
 #####################
 """
-Описание и назначение:
+Description and purpose:
 
-Этот модуль служит для регистрации и управления версиями моделей.
-Он позволяет сохранять метаинформацию о моделях, такие как время создания, гиперпараметры, версия и т.д.
+This module is used for registering and managing model versions.
+It allows saving meta-information about models, such as creation time, hyperparameters, version, etc.
 
-Ключевые функции:
+Key functions:
 
-register_model(model_name, model, metadata): Регистрирует новую версию модели с метаданными.
+register_model(model_name, model, metadata): Registers a new model version with metadata.
 
-get_model(model_name, version=None): Получает конкретную версию модели (если версия не указана, возвращает последнюю).
+get_model(model_name, version=None): Gets a specific model version (if version is not specified, returns the latest).
 
-list_models(): Возвращает список всех зарегистрированных моделей и их метаинформацию.
+list_models(): Returns a list of all registered models and their meta-information.
 
-Как взаимодействует с остальными модулями:
+How it interacts with other modules:
 
-Используется modelDeployerManager для получения текущих моделей при развёртывании.
-Работает с modelTrainerManager для регистрации новых моделей после успешного обучения.
+Used by modelDeployerManager to get current models during deployment.
+Works with modelTrainerManager to register new models after successful training.
 """

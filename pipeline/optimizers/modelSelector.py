@@ -1,24 +1,24 @@
-from sklearn.linear_model import LogisticRegression
+﻿from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 class ModelSelector:
     """
-    Класс для автоматического выбора модели на основе производительности.
+    Class for automatic model selection based on performance.
 
-    Методы:
-    - select_best_model: выбор наилучшей модели на основе точности.
+    Methods:
+    - select_best_model: selecting the best model based on accuracy.
     """
     def __init__(self, models):
         """
-        models: список моделей для выбора.
+        models: list of models for selection.
         """
         self.models = models
 
     def select_best_model(self, X_train, y_train, X_test, y_test):
         """
-        Выбор наилучшей модели на основе точности на тестовых данных.
+        Selecting the best model based on accuracy on test data.
         """
         best_model = None
         best_accuracy = 0
@@ -37,12 +37,12 @@ class ModelSelector:
 
 
 """
-Этот файл может содержать логику для выбора наилучшей модели для задачи на основе заданных критериев 
-(например, по меткам точности или другим меткам качества). 
-Он будет полезен, если в вашем проекте есть несколько моделей, и вы хотите автоматизировать процесс их выбора в зависимости от данных.
+This file may contain the logic for selecting the best model for a task based on specified criteria 
+(e.g., by accuracy scores or other quality scores). 
+It will be useful if your project has multiple models, and you want to automate the process of selecting them depending on the data.
 
-Роль этого модуля:
+Role of this module:
 
-Выбор модели. Суть заключается в том, чтобы выбрать наиболее подходящую модель для конкретных данных или задачи.
-Это может быть полезно в ситуациях, когда необходимо выбирать модель с наилучшей производительностью для конкретной задачи.
+Model selection. The essence is to select the most suitable model for specific data or task.
+This can be useful in situations where it is necessary to select the model with the best performance for a specific task.
 """

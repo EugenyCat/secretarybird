@@ -1,4 +1,4 @@
-from pipeline.ml_models.lstmWithAttentionModel.LSTMWithAttentionModel import LSTMWithAttentionModel
+﻿from pipeline.ml_models.lstmWithAttentionModel.LSTMWithAttentionModel import LSTMWithAttentionModel
 import logging
 
 

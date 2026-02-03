@@ -1,6 +1,7 @@
-from pipeline.helpers.setup import ETLProtocol, ConfigurationBuilder
+from pipeline.helpers.protocols import ETLProtocol
+from pipeline.helpers.setup import ConfigurationBuilder
 from pipeline.helpers.utils import ETLUtils
-from pipeline.helpers.db_funcs_etl import DBFuncsETL
+from pipeline.helpers.db_funcs_sql import DBFuncsSQL
 from pipeline.helpers.telegram_notifier import TelegramNotifier
 from system_files.constants.constants import DEFAULT_DATA_START_LOAD
 import os
@@ -32,15 +33,12 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
         # api_link - binance api url
         self.__api_link = os.getenv('BINANCE_API_LINK')
 
-        # path to json file that contains settings for etl
-        self.load_params = json.load(
-            open(f"{os.getenv('JSON_EXTRACT_CURRENCIES_SETTINGS')}", 'r')
-        )[self.__SOURCE_NAME]
+        self.set_processing_stage('raw')
 
 
     def validate_parameters(self, input_params):
         # Validate required parameters
-        required_params = ['currency', 'interval']
+        required_params = ['database', 'currency', 'interval']
 
         missing_params = [
             param
@@ -57,15 +55,10 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
 
         # Validate params
         try:
-            database = self.load_params['database']
-
+            database = str(input_params['database'])
             currency = str(input_params['currency'])
-            if currency not in self.load_params['currency']:
-                raise Exception(f'[etl_manager/etlBinance.py] Currency value {currency} isn\'t contented in currencies.json file')
-
             interval = str(input_params['interval'])
-            if interval not in self.load_params['interval']:
-                raise Exception(f'[etl_manager/etlBinance.py] Interval value {interval} isn\'t contented in currencies.json file')
+
 
             (   # self ETLBinance
                 self.set_database(database)
@@ -80,15 +73,17 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
                 .set_database(self.database)
                 .set_currency(self.currency)
                 .set_interval(self.interval)
+                .set_processing_stage(self.processing_stage)
             )
 
             # Set db_funcs: various database operations
             self.db_funcs = (
-                DBFuncsETL()
+                DBFuncsSQL()
                 .set_client_session(self.db_client_session)
                 .set_database(self.database)
                 .set_currency(self.currency)
                 .set_interval(self.interval)
+                .set_processing_stage(self.processing_stage)
             )
 
             # Get the start time from input parameters or define it based on database data
@@ -171,8 +166,7 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
         df_crypto_prices.drop(['Ignore'], axis=1, inplace=True)
         df_crypto_prices['Number_of_trades'] = df_crypto_prices['Number_of_trades'].apply(
             lambda v: str(v))
-        df_crypto_prices['Currency'] = self.currency
-        df_crypto_prices['Interval'] = self.interval
+        df_crypto_prices['ts_id'] = f"{self.currency}_{self.interval}"
         df_crypto_prices['Source'] = self.__SOURCE_NAME
 
         data_tuples = [list(x) for x in df_crypto_prices.to_numpy()]
@@ -271,4 +265,4 @@ class ETLBinance(ETLProtocol, ConfigurationBuilder):
             self.db_funcs = None
 
     def __str__(self):
-        return f'<[etl_manager/etlBinance.py] {self.currency}_{self.interval}: {self.start}-{self.end}>'
+        return f'[etl/etlBinance.py] {self.currency}_{self.interval}: {self.start}-{self.end}'

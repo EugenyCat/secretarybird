@@ -1,14 +1,14 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 
 
 class BaseModel(ABC):
     """
-        Этот файл содержит базовый класс для всех моделей, который будет реализовывать общие методы, такие как:
+        This file contains the base class for all models, which will implement common methods such as:
 
-        train() — для обучения модели.
-        predict() — для выполнения прогнозов.
-        save() — для сохранения модели.
-        load() — для загрузки модели.
+        train() — for training the model.
+        predict() — for making predictions.
+        save() — for saving the model.
+        load() — for loading the model.
     """
     @abstractmethod
     def train(self, X_train, y_train):
@@ -29,7 +29,7 @@ class BaseModel(ABC):
 
 class NeuralNetworkModel(BaseModel):
     """
-        Дополнительные методы для нейронных сетей.
+        Additional methods for neural networks.
     """
     @abstractmethod
     def train_on_batch(self, X_batch, y_batch):
@@ -45,25 +45,25 @@ class NeuralNetworkModel(BaseModel):
 
 ##################################
 """
-Здесь BaseModel задает структуру для всех классов моделей, требуя, 
-чтобы они реализовали методы train(), predict(), save() и load().
+Here BaseModel defines the structure for all model classes, requiring 
+them to implement the train(), predict(), save(), and load() methods.
 """
 """
-Этот файл содержит базовый класс, который предоставляет общий интерфейс для всех моделей машинного обучения. 
-Это позволяет гарантировать, что все модели, независимо от их типа, будут иметь одни и те же базовые методы для обучения, 
-предсказания, сохранения и загрузки.
+This file contains the base class that provides a common interface for all machine learning models. 
+This ensures that all models, regardless of their type, will have the same basic methods for training, 
+prediction, saving, and loading.
 
-Почему он нужен:
+Why it is needed:
 
-Абстракция: Все модели, включая классические алгоритмы и нейронные сети, должны следовать одному интерфейсу 
-для унификации их использования. Это позволяет их использовать в одном контексте (например, в пайплайне) 
-без необходимости знать, какая модель используется.
+Abstraction: All models, including classical algorithms and neural networks, must follow the same interface 
+for unified usage. This allows them to be used in the same context (for example, in a pipeline) 
+without needing to know which model is being used.
 
-Это упрощает добавление новых моделей, так как каждая новая модель будет просто реализовывать эти стандартные методы.
+This simplifies adding new models, as each new model will simply implement these standard methods.
 
 """
 
-#   -> baseModel.py определяет интерфейс для всех моделей.
-#   -> modelFactory.py позволяет создавать различные модели.
-#   -> modelRegistry.py управляет всеми моделями централизованно.
-#   -> lstmWithAttentionModel/ содержит код для конкретной модели LSTM с Attention.
+#   -> baseModel.py defines the interface for all models.
+#   -> modelFactory.py allows creating various models.
+#   -> modelRegistry.py manages all models centrally.
+#   -> lstmWithAttentionModel/ contains the code for a specific LSTM with Attention model.

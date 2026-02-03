@@ -51,9 +51,10 @@ class DataQualityManager(BaseManager):
         if os.path.exists(file_path):
             known_lacks = pd.read_csv(file_path)
             known_lacks['month_where_lacks'] = pd.to_datetime(known_lacks['month_where_lacks'])
+
             return known_lacks
 
-        return pd.DataFrame(columns=['month_where_lacks', 'interval', 'currency', 'rows_amount', 'data_created'])
+        return pd.DataFrame(columns=['month_where_lacks', 'ts_id', 'rows_amount', 'data_created'])
 
 
     def check_if_db_has_lacks(self):
@@ -67,8 +68,7 @@ class DataQualityManager(BaseManager):
             ch_response_df['month_where_lacks'] = pd.to_datetime(ch_response_df['month_where_lacks'])
 
             known_lacks = self.get_the_known_lacks()
-
-            new_lacks = ch_response_df.merge(known_lacks, on=['month_where_lacks', 'interval', 'currency', 'rows_amount'], how='left', indicator=True)
+            new_lacks = ch_response_df.merge(known_lacks, on=['month_where_lacks', 'ts_id', 'rows_amount'], how='left', indicator=True)
             new_lacks = new_lacks[new_lacks['_merge'] == 'left_only'].drop(columns='_merge')
 
             new_lacks['data_created'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -144,22 +144,21 @@ class DataQualityManager(BaseManager):
             Calculate the close time based on the interval
         """
         open_time = row['Open_time']
-        interval = row['Interval']
 
-        if interval == '1h':
+        if self.interval == '1h':
             delta = timedelta(hours=1)
-        elif interval == '12h':
+        elif self.interval == '12h':
             delta = timedelta(hours=12)
-        elif interval == '1d':
+        elif self.interval == '1d':
             delta = timedelta(days=1)
-        elif interval == '3d':
+        elif self.interval == '3d':
             delta = timedelta(days=3)
-        elif interval == '1w':
+        elif self.interval == '1w':
             delta = timedelta(weeks=1)
-        elif interval == '1M':
+        elif self.interval == '1M':
             delta = relativedelta(months=1)
         else:
-            raise ValueError(f"Unknown interval: {interval}")
+            raise ValueError(f"Unknown interval: {self.interval}")
 
         return open_time + delta - timedelta(seconds=1)
 
@@ -174,7 +173,7 @@ class DataQualityManager(BaseManager):
         # Create the whole data range
         full_time = self.get_data_range()
 
-        # Merge the currency data and whole data range
+        # Merge the currency data and whole data range # TODO: move it in some config , add auto logic for that , should depend on schema
         numeric_columns = [
             'Open',
             'High',
@@ -199,8 +198,7 @@ class DataQualityManager(BaseManager):
         df_currency_with_whole_datas.interpolate(method='time', inplace=True)
 
         # Set columns `Currency` and `Interval`
-        df_currency_with_whole_datas['Currency'] = self.currency
-        df_currency_with_whole_datas['Interval'] = self.interval
+        df_currency_with_whole_datas['ts_id'] = self.get_ts_id()
 
         # Set columns `Close_time`
         df_currency_with_whole_datas = df_currency_with_whole_datas.merge(df_currency[['Close_time', 'Source']], on='Open_time', how='left')
@@ -225,7 +223,7 @@ class DataQualityManager(BaseManager):
         """
             Insert data into ch
         """
-        column_names = [column[0] for column in self.db_funcs.table_columns]
+        column_names = [column[0] for column in self.db_funcs.get_table_columns()]
         data_tuples = [list(x) for x in df_currency[column_names].to_numpy()]
         self.db_funcs.insert_data(data_tuples)
 

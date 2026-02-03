@@ -1,26 +1,26 @@
-#   -> baseModel.py определяет интерфейс для всех моделей.
-#   -> modelFactory.py позволяет создавать различные модели.
-#   -> modelRegistry.py управляет всеми моделями централизованно.
-#   -> lstmWithAttentionModel/ содержит код для конкретной модели LSTM с Attention.
+﻿#   -> baseModel.py defines the interface for all models.
+#   -> modelFactory.py allows creating various models.
+#   -> modelRegistry.py manages all models centrally.
+#   -> lstmWithAttentionModel/ contains code for the specific LSTM with Attention model.
 
 
-Как это работает вместе?
+How does it work together?
 
-Модели создаются через фабрику:
-При запросе модели (например, lstm_attention) через ModelFactory,
-создается объект соответствующей модели, например, LSTMWithAttentionModel.
+Models are created through the factory:
+When requesting a model (e.g., lstm_attention) through ModelFactory,
+an object of the corresponding model is created, for example, LSTMWithAttentionModel.
 
-Модели регистрируются в реестре: После создания модели, ее можно зарегистрировать в ModelRegistry,
-чтобы впоследствии извлечь и использовать для предсказаний.
+Models are registered in the registry: After creating a model, it can be registered in ModelRegistry,
+so that it can later be retrieved and used for predictions.
 
-Модели обучаются и используются: Все модели имеют общий интерфейс с методами train(), predict(), save() и load(),
-что позволяет одинаково работать с разными типами моделей в вашем пайплайне.
+Models are trained and used: All models have a common interface with train(), predict(), save() and load() methods,
+which allows working uniformly with different types of models in your pipeline.
 
 
-Резюме:
-Структура позволяет вам легко расширять систему:
+Summary:
+The structure allows you to easily extend the system:
 
-baseModel.py определяет интерфейс для всех моделей.
-modelFactory.py позволяет создавать различные модели.
-modelRegistry.py управляет всеми моделями централизованно.
-lstmWithAttentionModel/ содержит код для конкретной модели LSTM с Attention.
+baseModel.py defines the interface for all models.
+modelFactory.py allows creating various models.
+modelRegistry.py manages all models centrally.
+lstmWithAttentionModel/ contains code for the specific LSTM with Attention model.

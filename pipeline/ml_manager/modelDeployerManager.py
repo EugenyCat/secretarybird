@@ -1,6 +1,6 @@
-class ModelDeployer:
+﻿class ModelDeployer:
     """
-    Этот файл будет управлять развертыванием моделей в production. Например, модели можно развернуть в MLflow или Seldon для интеграции с реальной системой.
+    This file will manage the deployment of models to production. For example, models can be deployed to MLflow or Seldon for integration with a real system.
     """
     def __init__(self, model_registry):
         self.model_registry = model_registry
@@ -8,7 +8,7 @@ class ModelDeployer:
     def deploy(self, model_name):
         model = self.model_registry.get_model(model_name)
         if model:
-            # Развертывание модели (например, в MLflow)
+            # Deploy the model (e.g., to MLflow)
             pass
         else:
             raise ValueError(f"Model {model_name} not found.")
@@ -17,19 +17,19 @@ class ModelDeployer:
 
 #########################
 """
-Описание и назначение:
+Description and purpose:
 
-Этот модуль управляет развёртыванием моделей в продакшн-среду. Он отвечает за подготовку моделей к работе, 
-обновление текущих версий, контроль версий и перенос модели на нужные платформы.
+This module manages the deployment of models to a production environment. It is responsible for preparing models for operation,
+updating current versions, version control, and transferring models to the required platforms.
 
-Ключевые функции:
+Key functions:
 
-deploy(model, environment): Выполняет развёртывание модели в указанную среду (например, локально, на сервере, в облаке).
+deploy(model, environment): Deploys the model to the specified environment (e.g., locally, on a server, in the cloud).
 
-rollback(model_name, version): Позволяет откатить модель к предыдущей версии в случае ошибки.
+rollback(model_name, version): Allows rolling back the model to a previous version in case of an error.
 
-Как взаимодействует с остальными модулями:
+How it interacts with other modules:
 
-Работает совместно с modelRegistryManager для получения текущей версии модели или ее обновления.
-Может взаимодействовать с ModelRegistry из папки ml_models для получения зарегистрированных моделей.
+Works together with modelRegistryManager to get the current model version or update it.
+Can interact with ModelRegistry from the ml_models folder to get registered models.
 """

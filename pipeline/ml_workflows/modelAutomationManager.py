@@ -1,15 +1,13 @@
-from pipeline.helpers.setup import ConfigurationBuilder
-from pipeline.helpers.db_funcs_ml import DBFuncsML
+﻿from pipeline.helpers.setup import ConfigurationBuilder
+from pipeline.helpers.db_funcs_orm import DBFuncsORM
 from pipeline.ml_models.modelFactory import ModelFactory
 from pipeline.ml_manager.modelTrainerManager import ModelTrainer
 from pipeline.ml_manager.modelEvaluatorManager import ModelEvaluator
-from pipeline.ts_preprocessing.ts_preprocessor import TimeSeriesPreprocessor
-from pipeline.ml_manager.modelRegistryManager import modelRegistryManager
+from pipeline.timeSeriesProcessing.preprocessor import TimeSeriesPreprocessor
 from pipeline.optimizers.hyperparameterOptimizer import HyperparameterOptimizer
 import json
 import os
 import logging
-import pandas as pd
 
 
 # TODO LIST
@@ -176,28 +174,28 @@ class ModelAutomationManager(ConfigurationBuilder):
 
     def automate(self):
         """
-        Выполняет полный процесс автоматизации: оптимизация гиперпараметров, обучение модели,
-        оценка, сохранение и предсказания.
+        Executes the full automation process: hyperparameter optimization, model training,
+        evaluation, saving, and predictions.
         """
-        print("Начало оптимизации гиперпараметров...")
+        print("Starting hyperparameter optimization...")
         best_params = self.optimizer.optimize()
 
-        # Обновление модели с наилучшими параметрами
+        # Update the model with the best parameters
         self.model = self.model.__class__(**best_params)
 
-        print("Обучение модели...")
+        print("Training the model...")
         self.trainer.train_model(self.model, self.data['X_train'], self.data['y_train'])
 
-        print("Оценка модели...")
+        print("Evaluating the model...")
         metrics = self.evaluator.evaluate(self.data['X_test'], self.data['y_test'])
-        print(f"Метрики оценки: {metrics}")
+        print(f"Evaluation metrics: {metrics}")
 
-        print("Сохранение модели...")
-        model_id = self.registry.register_model(self.model) # сюда же best_params, metrics
+        print("Saving the model...")
+        model_id = self.registry.register_model(self.model) # also best_params, metrics go here
 
-        print("Получение предсказаний...")
+        print("Getting predictions...")
         predictions = self.model.predict(self.data['X_test'])
-        print(f"Предсказания: {predictions}")
+        print(f"Predictions: {predictions}")
 
         return {
             "model_id": model_id,
@@ -235,7 +233,7 @@ class ModelAutomationManager(ConfigurationBuilder):
 
 
 
-# Инициализация и запуск автоматизации
+# Initialization and running automation
 #manager = ModelAutomationManager()
 #manager.run({
 #    "modelname": "lstm_attention",

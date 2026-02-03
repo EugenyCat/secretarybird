@@ -1,5 +1,5 @@
 from pipeline.helpers.setup import ConfigurationBuilder
-from pipeline.helpers.db_funcs_etl import DBFuncsETL
+from pipeline.helpers.db_funcs_sql import DBFuncsSQL
 from pipeline.helpers.telegram_notifier import TelegramNotifier
 import logging
 import os
@@ -20,47 +20,96 @@ class BaseManager(ConfigurationBuilder):
     line_str = '⤵\n'
     line_split_messages = '\n✦•·················•✦•·················•✦\n'
 
-    def __init__(self, source_name, use_extended_timeout=False):
+    def __init__(self, source_name, processing_stage='raw', use_extended_timeout=False):
         """
             Initializes the BaseManager instance, setting up a database connection,
             initializing database utility functions, and loading configuration settings.
 
             Args:
                 source_name (str): The name of the source configuration to be used.
+                processing_stage (str): The name of the processing stage: raw or transformed.
                 use_extended_timeout (bool): Flag to indicate if a longer connection timeout
                                              should be set for the database connection.
         """
         super().__init__()  # Call the parent class initializer
 
-        # Load API configurations from a JSON file specified by an environment variable
-        try:
-            config_path = os.getenv('JSON_EXTRACT_CURRENCIES_SETTINGS')
-            with open(config_path) as config_file:
-                config_data = json.load(config_file)
-                self.__api_configurations = config_data.get(source_name, {})
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logging.error(f"Error loading API configurations: {e}")
+        # Initialize the TelegramNotifier for sending notifications about backup status
+        self.notifier = TelegramNotifier()
+
+        # Store the source name for later use
+        self.__source_name = source_name
 
         # Set an extended connection timeout if specified and set the session
         if use_extended_timeout:
             self.clickhouse_conn.set_connection_timeout()
         self.set_client_session(self.clickhouse_conn.get_client_session())
+        self.set_sqlalchemy_session(self.clickhouse_conn.get_sqlalchemy_session())
 
-        # Set the database name from the loaded configurations
-        self.set_database(self.__api_configurations['database'])
+        # Set processing stage
+        if processing_stage not in ['raw', 'transformed']:
+            raise Exception(f"Processing stage has to be in ['raw', 'transformed'].")
+        self.set_processing_stage(processing_stage)
+
 
         # Initialize db_funcs to handle various database operations
         self.db_funcs = (
-            DBFuncsETL()  # Create an instance of DBFuncsETL
+            DBFuncsSQL()  # Create an instance of DBFuncsETL
             .set_client_session(self.db_client_session)
-            .set_database(self.database)
+            .set_sqlalchemy_session(self.db_sqlalchemy_session)
+            .set_processing_stage(self.processing_stage)
         )
 
-        # Initialize the TelegramNotifier for sending notifications about backup status
-        self.notifier = TelegramNotifier()
+        # Load API configurations from the database or JSON file
+        self.__load_api_configurations()
+
+        # Set the database name from the loaded configurations
+        self.set_database(self.__api_configurations['database'])
+        self.db_funcs.set_database(self.database)
+
+
+
+
+    def __load_api_configurations(self):
+        """
+        Load API configurations from the database, with a fallback to the JSON file.
+        """
+        try:
+            # Query the table using SQLAlchemy
+            time_series = self.db_funcs.get_time_series_definitions(self.__source_name)
+
+            # Check if we got any results
+            if not time_series:
+                raise Exception(f"No active time series found in the database for source: {self.__source_name}")
+
+            # Prepare result structure
+            self.__api_configurations = {
+                'database': time_series[0].database_name,
+                'currency': list(set(ts.currency.lower() for ts in time_series)),
+                'interval': list(set(ts.interval for ts in time_series))
+            }
+
+            logging.info(
+                f"Loaded API configurations from database for {self.__source_name}: {self.__api_configurations}")
+
+        except Exception as e:
+            error_message = f"Error getting API configurations from database: {e}."
+            logging.warning(error_message)
+            self.notifier.notify(error_message)
+
+            self.__api_configurations = None
+            #config_path = os.getenv('JSON_EXTRACT_CURRENCIES_SETTINGS')
+            #with open(config_path) as config_file:
+            #    config_data = json.load(config_file)
+            #    self.__api_configurations = config_data.get(self.__source_name, {})
 
 
     def get_api_configurations(self):
+        """
+            Returns the API configurations loaded from the database.
+
+            Returns:
+                dict: A dictionary containing API configuration.
+        """
         return self.__api_configurations
 
 

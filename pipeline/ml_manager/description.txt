@@ -1,21 +1,21 @@
-Как они работают вместе
+﻿How they work together
 
-Обучение:
-modelTrainerManager инициирует обучение новой модели, задает гиперпараметры и передает данные модели.
+Training:
+modelTrainerManager initiates the training of a new model, sets hyperparameters and passes data to the model.
 
-После обучения, модель может быть зарегистрирована с помощью modelRegistryManager.
+After training, the model can be registered using modelRegistryManager.
 
-Оценка: Обученная модель передается в modelEvaluatorManager для оценки. Метрики производительности могут быть сохранены или логированы.
+Evaluation: The trained model is passed to modelEvaluatorManager for evaluation. Performance metrics can be saved or logged.
 
-Регистрация и хранение: После успешной оценки модель регистрируется и сохраняется с помощью modelRegistryManager.
+Registration and storage: After successful evaluation, the model is registered and saved using modelRegistryManager.
 
-Развёртывание: Если модель одобрена для продакшн, modelDeployerManager разворачивает модель в нужной среде.
-В случае проблем можно использовать откат к предыдущей версии с помощью modelRegistryManager.
+Deployment: If the model is approved for production, modelDeployerManager deploys the model to the required environment.
+In case of problems, you can use rollback to a previous version using modelRegistryManager.
 
 
-Пример процесса использования:
+Example usage process:
 
-Модель обучается с помощью modelTrainerManager.
-Оценка проводится через modelEvaluatorManager.
-Модель регистрируется в modelRegistryManager.
-Если требуется, модель разворачивается через modelDeployerManager.
+Model is trained using modelTrainerManager.
+Evaluation is performed through modelEvaluatorManager.
+Model is registered in modelRegistryManager.
+If required, the model is deployed through modelDeployerManager.

@@ -1,39 +1,39 @@
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+﻿from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 
 class EnsembleOptimizer:
     """
-    Класс для объединения нескольких моделей в ансамбль для улучшения предсказаний.
+    Class for combining multiple models into an ensemble to improve predictions.
 
-    Методы:
-    - fit: обучение ансамбля моделей
-    - predict: выполнение предсказания на основе ансамбля моделей
+    Methods:
+    - fit: training the ensemble of models
+    - predict: performing prediction based on the ensemble of models
     """
     def __init__(self, base_models, final_model=None):
         """
-        base_models: список моделей для ансамбля
-        final_model: финальная модель для вывода результатов (например, логистическая регрессия для стэкинга)
+        base_models: list of models for the ensemble
+        final_model: final model for output results (e.g., logistic regression for stacking)
         """
         self.base_models = base_models
         self.final_model = final_model
 
     def fit(self, X_train, y_train):
         """
-        Обучение моделей ансамбля.
+        Training the ensemble models.
         """
-        # Обучаем все базовые модели
+        # Train all base models
         for model in self.base_models:
             model.fit(X_train, y_train)
 
-        # Обучение финальной модели
+        # Training the final model
         if self.final_model:
             base_predictions = np.column_stack([model.predict(X_train) for model in self.base_models])
             self.final_model.fit(base_predictions, y_train)
 
     def predict(self, X_test):
         """
-        Выполнение предсказания с использованием ансамбля моделей.
+        Performing prediction using the ensemble of models.
         """
         base_predictions = np.column_stack([model.predict(X_test) for model in self.base_models])
         if self.final_model:
@@ -46,13 +46,13 @@ class EnsembleOptimizer:
 
 ###################
 """
-В этом файле, судя по названию, будет реализована логика для объединения нескольких моделей (ансамблей), 
-чтобы улучшить итоговые предсказания. Основной смысл таких ансамблей в том, 
-что комбинация предсказаний разных моделей может быть более точной, чем использование одной модели.
+In this file, judging by the name, the logic for combining multiple models (ensembles) will be implemented, 
+to improve the final predictions. The main idea of such ensembles is that 
+the combination of predictions from different models can be more accurate than using a single model.
 
-Роль этого модуля:
+Role of this module:
 
-Объединение моделей. 
-Методы ансамблирования, такие как Bagging, Boosting или Stacking, могут значительно улучшить точность модели.
-Для этого можно использовать библиотеки, такие как sklearn.ensemble, или же собственные реализации.
+Combining models. 
+Ensemble methods such as Bagging, Boosting, or Stacking can significantly improve model accuracy.
+For this, you can use libraries such as sklearn.ensemble, or your own implementations.
 """
