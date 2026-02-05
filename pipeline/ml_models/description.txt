@@ -1,0 +1,26 @@
+﻿#   -> baseModel.py defines the interface for all models.
+#   -> modelFactory.py allows creating various models.
+#   -> modelRegistry.py manages all models centrally.
+#   -> lstmWithAttentionModel/ contains code for the specific LSTM with Attention model.
+
+
+How does it work together?
+
+Models are created through the factory:
+When requesting a model (e.g., lstm_attention) through ModelFactory,
+an object of the corresponding model is created, for example, LSTMWithAttentionModel.
+
+Models are registered in the registry: After creating a model, it can be registered in ModelRegistry,
+so that it can later be retrieved and used for predictions.
+
+Models are trained and used: All models have a common interface with train(), predict(), save() and load() methods,
+which allows working uniformly with different types of models in your pipeline.
+
+
+Summary:
+The structure allows you to easily extend the system:
+
+baseModel.py defines the interface for all models.
+modelFactory.py allows creating various models.
+modelRegistry.py manages all models centrally.
+lstmWithAttentionModel/ contains code for the specific LSTM with Attention model.

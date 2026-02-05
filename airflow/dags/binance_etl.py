@@ -41,6 +41,9 @@ with DAG(
     etl_process_manager = DataQualityManager(API_NAME)
     elt_config = etl_process_manager.get_api_configurations()
 
+    # Get the database name
+    database = elt_config['database']
+
     # Init the list for storing PythonOperator for `etl` tasks
     etl_binance_tasks = []
 
@@ -54,6 +57,7 @@ with DAG(
                 python_callable=etl_instance.run_etl,
                 op_kwargs={
                     'input_params': {
+                        'database': database,
                         'currency': currency,
                         'interval': interval
                     }

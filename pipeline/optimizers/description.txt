@@ -1,0 +1,54 @@
+Conclusion and recommendations:
+
+hyperparameterOptimizer.py:
+This module is useful for tuning model hyperparameters.
+It can be used to automate the search for the most effective parameters for a model.
+
+ensembleOptimizer.py:
+Module for combining multiple models into an ensemble.
+It is useful when you need to increase accuracy by combining predictions from different models
+(e.g., in stacking or bagging).
+
+modelSelector.py:
+This module helps to select the best model from a set of candidates,
+based on their performance on test data.
+This will help automatically determine the most effective model for the task.
+
+
+General idea:
+All three modules optimize different aspects of the model training process:
+
+The first (hyperparameters) tunes parameters for each model.
+The second (ensemble) combines multiple models to increase accuracy.
+The third (model selection) helps to select the best model for the task.
+
+Such separation allows you to keep your project clean and scalable,
+providing flexibility in tuning and selecting models for different scenarios.
+
+
+
+
+About Optimization
+Approaches used in HyperparameterOptimizer (e.g., Grid Search or Random Search),
+can also be applied to LSTMWithAttentionModel.
+However, these methods can be very slow for neural networks, since each combination of hyperparameters requires
+long model training.
+
+Recommended optimization methods for neural networks
+2. Bayesian Optimization:
+Why use: This is a more intelligent approach to hyperparameter optimization.
+The algorithm builds a probabilistic model that guides the selection of hyperparameters based on previous attempts,
+aiming to find optimal parameters faster.
+When to use: This is a good choice when model training takes significant time.
+An example implementation is the Optuna or Scikit-Optimize library.
+
+3. Hyperband:
+Why use: Hyperband is an improved version of Random Search,
+which dynamically allocates resources for experiments, determining early results of less
+promising hyperparameters and stopping their training. This helps significantly reduce search time.
+When to use: If you have many hyperparameters and need to flexibly distribute computational resources.
+
+4. Optuna or Ray Tune:
+Why use: These libraries provide high-level tools for flexible hyperparameter optimization,
+including integration with neural networks and support for dynamic search.
+When to use: If you want to get the ability to use advanced optimization methods with minimal effort.

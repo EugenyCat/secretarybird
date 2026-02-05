@@ -1,6 +1,9 @@
 import clickhouse_connect
 import os
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -21,6 +24,9 @@ class ClickHouseConnection:
             Initialize the session manager with connection details, using environment variables if not provided.
         """
         self.client = None
+        self.session = None
+        self.engine = None
+
         self.__host = host or os.getenv('CLICKHOUSE_HOST')
         self.__port = port or os.getenv('CLICKHOUSE_PORT')
         self.__user = user or os.getenv('CLICKHOUSE_USER')
@@ -32,7 +38,7 @@ class ClickHouseConnection:
         self.__timeout = timeout
 
 
-    def get_session(self):
+    def get_client_session(self):
         """
             Get a ClickHouse client session, creating one if it does not already exist.
         """
@@ -47,6 +53,19 @@ class ClickHouseConnection:
         return self.client
 
 
+    def get_sqlalchemy_session(self):
+        """
+            Get an SQLAlchemy session, creating one if it does not already exist.
+        """
+        if self.engine is None:
+            # SQLAlchemy params
+            database_url = f"clickhouse+http://{self.__user}:{self.__password}@{self.__host}:{self.__port}"
+            self.engine = create_engine(database_url)
+            self.session = sessionmaker(bind=self.engine)
+
+        return self.session()
+
+
     def close_session(self):
         """
             Close the ClickHouse client session if it is open and clean up the client reference.
@@ -55,3 +74,7 @@ class ClickHouseConnection:
             self.client.close()
             del self.client
             self.client = None
+        if self.engine:
+            self.engine.dispose()
+            self.engine = None
+        self.session = None

@@ -35,7 +35,7 @@ class ClickHouseBackupManager(BaseManager):
                                              if longer database operations are expected.
         """
 
-        super().__init__(source_name, use_extended_timeout)  # Call the parent class initializer
+        super().__init__(source_name=source_name, use_extended_timeout=use_extended_timeout)  # Call the parent class initializer
 
         # Ensure the backup subdirectory exists in the ClickHouse container
         self.ensure_subdirectory_exists()
@@ -279,7 +279,7 @@ class ClickHouseBackupManagerFacade(ClickHouseBackupManager):
                                              for database operations.
         """
         # Call the parent class initializer to set up inherited functionalities
-        super().__init__(source_name, use_extended_timeout)
+        super().__init__(source_name=source_name, use_extended_timeout=use_extended_timeout)
 
 
     def __construct_error_notification(self, title, text_message):

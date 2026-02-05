@@ -1,0 +1,21 @@
+﻿How they work together
+
+Training:
+modelTrainerManager initiates the training of a new model, sets hyperparameters and passes data to the model.
+
+After training, the model can be registered using modelRegistryManager.
+
+Evaluation: The trained model is passed to modelEvaluatorManager for evaluation. Performance metrics can be saved or logged.
+
+Registration and storage: After successful evaluation, the model is registered and saved using modelRegistryManager.
+
+Deployment: If the model is approved for production, modelDeployerManager deploys the model to the required environment.
+In case of problems, you can use rollback to a previous version using modelRegistryManager.
+
+
+Example usage process:
+
+Model is trained using modelTrainerManager.
+Evaluation is performed through modelEvaluatorManager.
+Model is registered in modelRegistryManager.
+If required, the model is deployed through modelDeployerManager.
