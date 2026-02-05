@@ -13,7 +13,7 @@ class GrafanaBackupManager:
         Handles API requests to Grafana.
     """
 
-    __API_KEY = os.getenv('API_KEY')
+    #__API_KEY = os.getenv('API_KEY')
     __GRAFANA_URL = os.getenv('GRAFANA_URL')
     _BACKUP_DIR = GRAFANA_BACKUP_DIR
 
@@ -21,8 +21,8 @@ class GrafanaBackupManager:
         """
             Initializes the GrafanaAPI with necessary credentials.
         """
-        if not self.__API_KEY or not self.__GRAFANA_URL:
-            raise ValueError("API_KEY and GRAFANA_URL must be set in the environment variables.")
+        if not self.__GRAFANA_URL: # not self.__API_KEY or
+            raise ValueError("GRAFANA_URL must be set in the environment variables.")
 
 
     def __get_headers(self):

@@ -1,0 +1,7 @@
+{
+  "ml_timeseries": {
+    "database": "ConfigKernel",
+    "model_names": ["lstm_attention"],
+    "ts_source_name": ["binance_api"]
+  }
+}

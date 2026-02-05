@@ -62,7 +62,13 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
-    _PIP_ADDITIONAL_REQUIREMENTS: clickhouse_connect==0.7.15 python-telegram-bot==13.12
+    _PIP_ADDITIONAL_REQUIREMENTS: >
+      clickhouse_connect==0.7.15
+      python-telegram-bot==13.12
+      scikit-learn==1.3.2
+      clickhouse-sqlalchemy==0.2.3
+      dogpile.cache==1.4.0
+      redis==6.0.0
     PYTHONPATH: '/opt/airflow/dags:/opt/airflow/database:/opt/airflow/pipline:/opt/airflow/pipeline/etl'
     TZ: UTC
     #_AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
@@ -85,7 +91,7 @@ x-airflow-common:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/airflow.cfg:/opt/airflow.cfg
     - ./pipeline:/opt/airflow/pipeline
-    - ./system_files/etl_assets:/opt/airflow/system_files/etl_assets
+    - ./system_files/pipeline_assets:/opt/airflow/system_files/pipeline_assets
     - ./system_files/info_lacks_db:/opt/airflow/system_files/info_lacks_db
     - ./system_files/grafana_files:/opt/airflow/system_files/provisioning
     - ./system_files/constants:/opt/airflow/system_files/constants
@@ -114,7 +120,7 @@ services:
 
   redis:
     image: redis:latest
-    expose:
+    expose: # ports
       - 6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
